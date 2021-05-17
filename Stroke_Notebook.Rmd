@@ -1,0 +1,69 @@
+---
+title: "Stroke Notebook"
+output:
+  html_document:
+    df_print: paged
+  keep_tex: yes
+  html_notebook: default
+  pdf_document: default
+---
+
+Presentation of the dataset:
+
+```{r}
+stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
+#View(stroke_data)
+names(stroke_data)
+```
+```{r}
+attach(stroke_data)
+```
+
+No NA values in the dataset:
+
+```{r}
+sum(is.na(stroke_data))
+```
+Full model where I removed the useless variables:
+
+```{r}
+full.mod <- lm(stroke~.-ever_married-id,data=stroke_data)
+summary(full.mod)
+```
+
+Anova:
+```{r}
+anova(full.mod)
+```
+
+We can see that some variables are not interesting in the analysis, such as residence_type, bmi and smoking_status. We remove them from the model and do another analysis:
+```{r}
+red.mod <- lm(stroke~age+hypertension+heart_disease+work_type+avg_glucose_level)
+summary(red.mod)
+```
+Anova:
+```{r}
+anova(red.mod)
+```
+
+```{r}
+anova(full.mod, red.mod)
+```
+The reduced model is preferable.
+
+Actually, linear regression is not appropriate when the response is binary, so we have to use the generalized linear model tecnique.
+
+```{r}
+mod <- glm(stroke~age+hypertension+heart_disease+work_type+avg_glucose_level)
+summary(mod)
+```
+```{r}
+plot(mod)
+```
+Very funny plots indeed :)
+
+We can do a pairs plot to see the correlation between the variables (must be non categorical)
+but not very useful.
+
+We can check how strong are the relationship between variable and if there is a synergy (iteraction) between them.
+
