@@ -2,20 +2,19 @@
 stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
 View(stroke_data)
 names(stroke_data)
-attach(stroke_data)
 summary(stroke_data)
 sum(is.na(stroke_data))
 
 # trasformazione variabili categoriche
 stroke_data<-stroke_data[,-1]
-stroke_data$gender<- as.factor(gender)
-stroke_data$ever_married<-as.factor(ever_married)
-stroke_data$work_type<-as.factor(work_type)
-stroke_data$Residence_type<-as.factor(Residence_type)
-stroke_data$smoking_status<-as.factor(smoking_status)
+stroke_data$gender<- as.factor(stroke_data$gender)
+stroke_data$ever_married<-as.factor(stroke_data$ever_married)
+stroke_data$work_type<-as.factor(stroke_data$work_type)
+stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
+stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
 
 # modifiche a bmi
-stroke_data$bmi <- as.numeric(bmi)
+stroke_data$bmi <- as.numeric(stroke_data$bmi)
 stroke_data<- na.omit(stroke_data)
 
 summary(stroke_data)
@@ -60,12 +59,12 @@ box_plot_categories <- function(data, y){
 
 pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 
-mod <- glm(stroke~.,data = stroke_data, family = binomial)
-summary(mod)
+full_mod <- glm(stroke~.,data = stroke_data, family = binomial)
+summary(full_mod)
 
 # residuals plots in R
 par(mfrow=c(2,2))
-plot(mod.out)
+plot(full_mod)
 par(mfrow=c(1,1))
 
 # how to detect Other gender
