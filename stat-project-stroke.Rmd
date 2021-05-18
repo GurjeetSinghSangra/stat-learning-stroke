@@ -1,0 +1,51 @@
+---
+title: "Statistical Learning Project"
+author: " Filippo Santin, Gurjeet Singh, Francesca Zen"
+date: "18/5/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Exploiting the Dataset
+
+In the following report we present the analysis computed on the stroke dataset provided by kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset].
+```{r}
+stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
+attach(stroke_data)
+```
+
+It is composed of 5,110 entries with a total of 12 columns: id, gender, age, hypertension, heart_diseas, ever_married, work_type, Residence_type, avg_glucose_level, bmi, smokin_status, stroke.
+Our aim is to see how the features were related to each other in order to predict which individual is more probable to get a stroke.
+The preliminary part of the analysis focuses on the study of the dataset, we remove the column which identify the singular individuals 
+```{r}
+stroke_data<-stroke_data[,-1]
+```
+
+and transformed the categorical variables into factors:
+
+```{r}
+stroke_data$gender<- as.factor(gender)
+stroke_data$ever_married<-as.factor(ever_married)
+stroke_data$work_type<-as.factor(work_type)
+stroke_data$Residence_type<-as.factor(Residence_type)
+stroke_data$smoking_status<-as.factor(smoking_status)
+```
+
+We discovered that the variable bmi was not numeric because of the presence of a string "N/A" which identifies the lack of the value, and so we transform it using the command `stroke_data$bmi <- as.numeric(bmi)`. We then removed those NA values:`stroke_data<- na.omit(stroke_data)`.
+We ended up having  4,909 entries and 11 total columns.
+Here we give a quick overview of the main information about the dataset:
+
+```{r}
+summary(stroke_data)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
