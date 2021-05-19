@@ -60,6 +60,7 @@ attach(stroke_data)
 ##################################
 #### Dataset biased 
 par(mfrow=c(1, 1))
+
 barplot(table(stroke_data$stroke)/dim(stroke_data)[1])
 ############
 # box plots
@@ -67,7 +68,17 @@ boxplot(avg_glucose_level)
 boxplot(bmi)
 boxplot(age)
 ##################################
-####### pair plot y~age
+################################# Scatter plot ###################
+#plot(avg_glucose_level,bmi, pch=16,col=as.factor(stroke))
+ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
+                        col = as.factor(stroke))) + geom_point()
+ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
+                        col = as.factor(stroke))) + geom_point()
+ggplot(stroke_data, aes(x = bmi, y = age,
+                        col = as.factor(stroke))) + geom_point()
+par(mfrow=c(1,1))
+boxplot(age~avg_glucose_level)
+############################## pair plot y~age
 par(mfrow=c(1,1))
 plot(stroke~age)
 par(mfrow=c(2,1))
