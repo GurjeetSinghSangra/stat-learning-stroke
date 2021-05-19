@@ -56,22 +56,68 @@ box_plot_categories <- function(data, y){
 }
 
 ##################################
-
+attach(stroke_data)
+##################################
+#### Dataset biased 
+par(mfrow=c(1, 1))
+barplot(table(stroke_data$stroke)/dim(stroke_data)[1])
+############
+# box plots
+boxplot(avg_glucose_level)
+boxplot(bmi)
+boxplot(age)
+##################################
+####### pair plot y~age
+par(mfrow=c(1,1))
+plot(stroke~age)
+par(mfrow=c(2,1))
+plot(stroke~bmi)
+plot(stroke~avg_glucose_level)
+par(mfrow=c(1,1))
+##################################
+# PAIR PLOTS WITH histogram and correlation matrix
 pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
+pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
 
-full_mod <- glm(stroke~.,data = stroke_data, family = binomial)
-summary(full_mod)
+# RESIDUAL PLOTS AND DIAGNOSTICS FOR LOGISTIC GLMs
+#########################################
+mod.full <- glm(stroke_data$stroke~., data=stroke_data, family = binomial)
+summary(mod.full)
+mod.full.resid <- residuals(mod.full, type="deviance") # because we have a binary response
+predicted <- predict(mod.full, type = "link")
 
-# residuals plots in R
+par(mfrow=c(1,2))
+plot(mod.full.resid~predicted)
+abline(h=0)
+qqnorm(mod.full.resid)
+qqline(mod.full.resid)
+######################
 par(mfrow=c(2,2))
-plot(full_mod)
+plot(mod.full)
 par(mfrow=c(1,1))
 
 # how to detect Other gender
 # stroke_data[stroke_data$gender=='Other',]
 
-# box plots
-boxplot(stroke_data$avg_glucose_level)
-boxplot(stroke_data$bmi)
-boxplot(stroke_data$age)
+red.model = glm(stroke_data$stroke~stroke_data$avg_glucose_level + stroke_data$bmi,data = stroke_data, family = binomial)
+summary(full_mod)
+par(mfrow=c(2,2))
+plot(red.model)
+par(mfrow=c(1,1))
 
+#############################
+# PAIRWISE INTERACTION BETWEEN: avg_glucose, age, bmi
+#############################
+attach(stroke_data)
+int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status +
+      heart_disease + bmi * avg_glucose_level , family = binomial)
+summary(int.mod)
+
+red1 = glm(stroke~age, family=binomial)
+summary(red1)
+red2 = glm(stroke~age + smoking_status + age*smoking_status, family = binomial)
+summary(red2)
+red3 = glm(stroke~bmi+age + smoking_status + age*smoking_status, family=binomial)
+summary(red3)
+
+cor(stroke_data)
