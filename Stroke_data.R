@@ -77,7 +77,7 @@ ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
 ggplot(stroke_data, aes(x = bmi, y = age,
                         col = as.factor(stroke))) + geom_point()
 par(mfrow=c(1,1))
-boxplot(age~avg_glucose_level)
+#boxplot(age~avg_glucose_level)
 ############################## pair plot y~age
 par(mfrow=c(1,1))
 plot(stroke~age)
@@ -120,8 +120,8 @@ par(mfrow=c(1,1))
 # PAIRWISE INTERACTION BETWEEN: avg_glucose, age, bmi
 #############################
 attach(stroke_data)
-int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status +
-      heart_disease + bmi * avg_glucose_level , family = binomial)
+int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status + work_type+
+      heart_disease+ age*ever_married   , family = binomial)
 summary(int.mod)
 
 red1 = glm(stroke~age, family=binomial)
@@ -130,5 +130,20 @@ red2 = glm(stroke~age + smoking_status + age*smoking_status, family = binomial)
 summary(red2)
 red3 = glm(stroke~bmi+age + smoking_status + age*smoking_status, family=binomial)
 summary(red3)
+###########################################
+#                   LDA
+#       Assumption: sample normally distributed and same variances.
+############################################
+lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
+lda.pred <- predict(lda.fit)
+table(lda.pred$class, stroke)
 
-cor(stroke_data)
+###########################################
+#                   QDA
+#       Assumption: sample normally distributed and BOT NOT SAME variance among samples.
+############################################
+qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
+# ERROR rank deficiency, i.e. some variables 
+# are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
+qda.pred <- predict(qda.fit, stroke_data)
+table(qda.pred$class, stroke)
