@@ -61,12 +61,13 @@ attach(stroke_data)
 #### Dataset biased 
 par(mfrow=c(1, 1))
 
-barplot(table(stroke_data$stroke)/dim(stroke_data)[1])
+barplot(table(stroke_data$stroke)/dim(stroke_data)[1],
+        xlab='probability to have a stroke')
 ############
 # box plots
-boxplot(avg_glucose_level)
-boxplot(bmi)
-boxplot(age)
+boxplot(avg_glucose_level, xlab= 'average glucose level')
+boxplot(bmi, xlab = 'body mass index')
+boxplot(age, xlab = 'age')
 ##################################
 ################################# Scatter plot ###################
 #plot(avg_glucose_level,bmi, pch=16,col=as.factor(stroke))
@@ -110,16 +111,10 @@ par(mfrow=c(1,1))
 # how to detect Other gender
 # stroke_data[stroke_data$gender=='Other',]
 
-red.model = glm(stroke_data$stroke~stroke_data$avg_glucose_level + stroke_data$bmi,data = stroke_data, family = binomial)
-summary(full_mod)
-par(mfrow=c(2,2))
-plot(red.model)
-par(mfrow=c(1,1))
-
 #############################
 # PAIRWISE INTERACTION BETWEEN: avg_glucose, age, bmi
 #############################
-attach(stroke_data)
+
 int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status +
       heart_disease + bmi * avg_glucose_level , family = binomial)
 summary(int.mod)
@@ -132,3 +127,44 @@ red3 = glm(stroke~bmi+age + smoking_status + age*smoking_status, family=binomial
 summary(red3)
 
 cor(stroke_data)
+
+
+###################
+# F-statistic to see correlations
+###################
+var.test(age,avg_glucose_level) # low p-value -> relation
+var.test(age, hypertension) # low p-value -> relation
+var.test(hypertension,avg_glucose_level) # low p-value -> relation
+var.test(age, heart_disease) # low p-value -> relation
+var.test(avg_glucose_level,heart_disease) # low p-value, very high F -> relation?
+
+#### forward model
+####################
+mod1 <- glm(stroke~age, family=binomial)
+summary(mod1)
+
+mod2 <- glm(stroke~age+avg_glucose_level+age*avg_glucose_level, family = binomial)
+summary(mod2) # -> age no correlated
+
+mod3 <-glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension
+            family = binomial)
+summary(mod3) 
+
+mod4 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+              hypertension*avg_glucose_level+hypertension*age,
+             family = binomial)
+summary(mod4)
+
+mod5 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+            heart_disease+hypertension*age, family = binomial)
+summary(mod5)
+
+mod6 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+              heart_disease+hypertension*age + heart_disease*avg_glucose_level+
+              heart_disease*hypertension, family = binomial)
+summary(mod6)
+
+mod7 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+              hypertension*age + heart_disease*avg_glucose_level+
+              heart_disease*hypertension)
+summary(mod7)
