@@ -71,6 +71,7 @@ boxplot(age, xlab = 'age')
 ##################################
 ################################# Scatter plot ###################
 #plot(avg_glucose_level,bmi, pch=16,col=as.factor(stroke))
+library(ggplot2)
 ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
                         col = as.factor(stroke))) + geom_point()
 ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
@@ -88,12 +89,14 @@ plot(stroke~avg_glucose_level)
 par(mfrow=c(1,1))
 ##################################
 # PAIR PLOTS WITH histogram and correlation matrix
+#pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
 pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
-pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
+# Result pairswise plot with matrix correlation: Strong colinearity among:
+# age, worktype, and ever_married => When fitting they do not help and also are redundant dummy variable.
 
 # RESIDUAL PLOTS AND DIAGNOSTICS FOR LOGISTIC GLMs
 #########################################
-#full model
+#Full Model
 #####
 mod.full <- glm(stroke_data$stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
@@ -111,9 +114,9 @@ plot(mod.full)
 par(mfrow=c(1,1))
 
 ##############################################
-#reduced model with age, hypertension, avg_glucose_level which are the variables with the highest level of significance
+#reduced model with age, hypertension, avg_glucose_level, bmi which are the variables with the highest level of significance
 #####
-mod.red <- glm(stroke_data$stroke~stroke_data$age + stroke_data$avg_glucose_level+ stroke_data$hypertension, data=stroke_data, family = binomial)
+mod.red <- glm(stroke_data$stroke~stroke_data$age + stroke_data$bmi + stroke_data$avg_glucose_level+ stroke_data$hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 
 mod.red.resid <- residuals(mod.red, type="deviance") # because we have a binary response
@@ -140,43 +143,8 @@ anova(mod.full,mod.red)
 # PAIRWISE INTERACTION BETWEEN: avg_glucose, age, bmi
 #############################
 
-attach(stroke_data)
-int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status + work_type+
-      heart_disease+ age*ever_married   , family = binomial)
-
-
-int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status +
-      heart_disease + bmi * avg_glucose_level , family = binomial)
-
-summary(int.mod)
-
-red1 = glm(stroke~age, family=binomial)
-summary(red1)
-red2 = glm(stroke~age + smoking_status + age*smoking_status, family = binomial)
-summary(red2)
-red3 = glm(stroke~bmi+age + smoking_status + age*smoking_status, family=binomial)
-summary(red3)
-
-###########################################
-#                   LDA
-#       Assumption: sample normally distributed and same variances.
-############################################
-lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
-lda.pred <- predict(lda.fit)
-table(lda.pred$class, stroke)
-
-###########################################
-#                   QDA
-#       Assumption: sample normally distributed and BOT NOT SAME variance among samples.
-############################################
-qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
-# ERROR rank deficiency, i.e. some variables 
-# are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
-qda.pred <- predict(qda.fit, stroke_data)
-table(qda.pred$class, stroke)
-
 ###################
-# F-statistic to see correlations
+# F-statistic to see variance
 ###################
 var.test(age,avg_glucose_level) # low p-value -> relation
 var.test(age, hypertension) # low p-value -> relation
@@ -184,7 +152,7 @@ var.test(hypertension,avg_glucose_level) # low p-value -> relation
 var.test(age, heart_disease) # low p-value -> relation
 var.test(avg_glucose_level,heart_disease) # low p-value, very high F -> relation?
 
-#### forward model
+#### forward model AND INTERACTIONS
 ####################
 mod1 <- glm(stroke~age, family=binomial)
 summary(mod1)
@@ -210,8 +178,43 @@ mod6 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
               heart_disease*hypertension, family = binomial)
 summary(mod6)
 
+# Nice shot Francesca!!!!!!
+# i residui della devianza si stra abbassano and interaction spotted with avg_glucose*age and age*hypertension
+# Da confrontare con R adjusted e validation test
+# The interactions seem to make a lot of sense
+# Question: cosa cambia tra il 6 e il 7, no additive term of hear disease, why so big difference then?
 mod7 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
               hypertension*age + heart_disease*avg_glucose_level+
               heart_disease*hypertension)
 summary(mod7)
+#aggiungiamo anche BMI which is an important factor too even if beta is small
+mod8 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+              hypertension*age + heart_disease*avg_glucose_level+
+              heart_disease*hypertension + bmi  )
+summary(mod8)
+par(mfrow=c(2,2))
+plot(mod8)
+par(mfrow=c(1,1))
+boxplot(avg_glucose_level~heart_disease)
+# count the number table(hypertension, heart_disease)
+###########################################
+#                   LDA
+#       Assumption: sample normally distributed and same variances, too strong assumption.
+############################################
+library(MASS)
+lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
+lda.pred <- predict(lda.fit)
+table(lda.pred$class, stroke)
+
+###########################################
+#                   QDA
+#       Assumption: sample normally distributed and BOT NOT SAME variance among samples.
+############################################
+qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
+# ERROR rank deficiency, i.e. some variables 
+# are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
+qda.pred <- predict(qda.fit, stroke_data)
+#TODO: Calculate deviance and standardize deviance
+
+table(qda.pred$class, stroke)
 
