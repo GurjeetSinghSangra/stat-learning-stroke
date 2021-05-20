@@ -139,15 +139,15 @@ anova(mod.full,mod.red)
 #############################
 # PAIRWISE INTERACTION BETWEEN: avg_glucose, age, bmi
 #############################
-<<<<<<< HEAD
+
 attach(stroke_data)
 int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status + work_type+
       heart_disease+ age*ever_married   , family = binomial)
-=======
+
 
 int.mod <- glm(stroke~bmi + age + avg_glucose_level+ hypertension + gender + smoking_status +
       heart_disease + bmi * avg_glucose_level , family = binomial)
->>>>>>> f9be29844ada8daf8727975b1c7566f5da3ecabf
+
 summary(int.mod)
 
 red1 = glm(stroke~age, family=binomial)
@@ -156,7 +156,7 @@ red2 = glm(stroke~age + smoking_status + age*smoking_status, family = binomial)
 summary(red2)
 red3 = glm(stroke~bmi+age + smoking_status + age*smoking_status, family=binomial)
 summary(red3)
-<<<<<<< HEAD
+
 ###########################################
 #                   LDA
 #       Assumption: sample normally distributed and same variances.
@@ -174,10 +174,6 @@ qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoki
 # are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
 qda.pred <- predict(qda.fit, stroke_data)
 table(qda.pred$class, stroke)
-=======
-
-cor(stroke_data)
-
 
 ###################
 # F-statistic to see correlations
@@ -218,4 +214,4 @@ mod7 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
               hypertension*age + heart_disease*avg_glucose_level+
               heart_disease*hypertension)
 summary(mod7)
->>>>>>> f9be29844ada8daf8727975b1c7566f5da3ecabf
+
