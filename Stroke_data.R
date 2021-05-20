@@ -146,7 +146,7 @@ summary(mod1)
 mod2 <- glm(stroke~age+avg_glucose_level+age*avg_glucose_level, family = binomial)
 summary(mod2) # -> age no correlated
 
-mod3 <-glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension
+mod3 <-glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension,
             family = binomial)
 summary(mod3) 
 
