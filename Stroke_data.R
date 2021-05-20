@@ -93,6 +93,8 @@ pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.pane
 
 # RESIDUAL PLOTS AND DIAGNOSTICS FOR LOGISTIC GLMs
 #########################################
+#full model
+#####
 mod.full <- glm(stroke_data$stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
 mod.full.resid <- residuals(mod.full, type="deviance") # because we have a binary response
@@ -107,6 +109,29 @@ qqline(mod.full.resid)
 par(mfrow=c(2,2))
 plot(mod.full)
 par(mfrow=c(1,1))
+
+##############################################
+#reduced model with age, hypertension, avg_glucose_level which are the variables with the highest level of significance
+#####
+mod.red <- glm(stroke_data$stroke~stroke_data$age + stroke_data$avg_glucose_level+ stroke_data$hypertension, data=stroke_data, family = binomial)
+summary(mod.red)
+
+mod.red.resid <- residuals(mod.red, type="deviance") # because we have a binary response
+predicted <- predict(mod.red, type = "link")
+
+par(mfrow=c(1,2))
+plot(mod.red.resid~predicted)
+abline(h=0)
+qqnorm(mod.red.resid)
+qqline(mod.red.resid)
+######################
+par(mfrow=c(2,2))
+plot(mod.red)
+par(mfrow=c(1,1))
+
+#anova computation
+anova(mod.full,mod.red)
+
 
 # how to detect Other gender
 # stroke_data[stroke_data$gender=='Other',]
