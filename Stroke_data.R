@@ -151,6 +151,7 @@ var.test(age, hypertension) # low p-value -> relation
 var.test(hypertension,avg_glucose_level) # low p-value -> relation
 var.test(age, heart_disease) # low p-value -> relation
 var.test(avg_glucose_level,heart_disease) # low p-value, very high F -> relation?
+var.test(age,bmi)
 
 #### forward model AND INTERACTIONS
 ####################
@@ -160,42 +161,59 @@ summary(mod1)
 mod2 <- glm(stroke~age+avg_glucose_level+age*avg_glucose_level, family = binomial)
 summary(mod2) # -> age no correlated
 
-mod3 <-glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension,
+# remove age*avg_glucose_level and 
+# add age
+mod3 <-glm(stroke~avg_glucose_level+hypertension + age,
             family = binomial)
 summary(mod3) 
 
-mod4 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+# add hypertension*avg_glucose_level+hypertension*age
+mod4 <- glm(stroke~avg_glucose_level+age+hypertension+
               hypertension*avg_glucose_level+hypertension*age,
              family = binomial)
 summary(mod4)
 
-mod5 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
-            heart_disease+hypertension*age, family = binomial)
+# remove hypertension*avg_glucose_level+hypertension*age 
+# add heart_disease
+mod5 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+age+
+            heart_disease, family = binomial)
 summary(mod5)
 
-mod6 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+
+# remove glucose_level*age
+# add hypertension*age + heart_disease*avg_glucose_level+ heart_disease*hypertension
+mod6 <- glm(stroke~age+avg_glucose_level +age*avg_glucose_level+hypertension+
               heart_disease+hypertension*age + heart_disease*avg_glucose_level+
               heart_disease*hypertension, family = binomial)
 summary(mod6)
 
-# Nice shot Francesca!!!!!!
-# i residui della devianza si stra abbassano and interaction spotted with avg_glucose*age and age*hypertension
+
 # Da confrontare con R adjusted e validation test
-# The interactions seem to make a lot of sense
 # Question: cosa cambia tra il 6 e il 7, no additive term of hear disease, why so big difference then?
 mod7 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
               hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension)
+              heart_disease*hypertension, family = binomial)
 summary(mod7)
-#aggiungiamo anche BMI which is an important factor too even if beta is small
-mod8 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
+
+# remove age*avg_glucose_level
+# add bmi
+mod8 <- glm(stroke~avg_glucose_level+hypertension+
               hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension + bmi  )
+              heart_disease*hypertension + bmi, family = binomial  )
 summary(mod8)
+
+# remove bmi
+mod9 <- glm(stroke~avg_glucose_level+hypertension+age+
+              hypertension*age + heart_disease*avg_glucose_level+
+              heart_disease*hypertension + bmi*age+bmi*avg_glucose_level, family = binomial  )
+summary(mod9)
+
 par(mfrow=c(2,2))
-plot(mod8)
+plot(mod9)
 par(mfrow=c(1,1))
+
 boxplot(avg_glucose_level~heart_disease)
+
 # count the number table(hypertension, heart_disease)
 ###########################################
 #                   LDA
@@ -210,6 +228,7 @@ table(lda.pred$class, stroke)
 #                   QDA
 #       Assumption: sample normally distributed and BOT NOT SAME variance among samples.
 ############################################
+
 qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
 # ERROR rank deficiency, i.e. some variables 
 # are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
