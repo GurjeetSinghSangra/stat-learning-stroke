@@ -98,7 +98,7 @@ pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 #########################################
 #Full Model
 #####
-mod.full <- glm(stroke_data$stroke~., data=stroke_data, family = binomial)
+mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
 mod.full.resid <- residuals(mod.full, type="deviance") # because we have a binary response
 predicted <- predict(mod.full, type = "link")
@@ -116,7 +116,7 @@ par(mfrow=c(1,1))
 ##############################################
 #reduced model with age, hypertension, avg_glucose_level, bmi which are the variables with the highest level of significance
 #####
-mod.red <- glm(stroke_data$stroke~stroke_data$age + stroke_data$bmi + stroke_data$avg_glucose_level+ stroke_data$hypertension, data=stroke_data, family = binomial)
+mod.red <- glm(stroke~age + bmi + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 
 mod.red.resid <- residuals(mod.red, type="deviance") # because we have a binary response
@@ -127,6 +127,7 @@ plot(mod.red.resid~predicted)
 abline(h=0)
 qqnorm(mod.red.resid)
 qqline(mod.red.resid)
+
 ######################
 par(mfrow=c(2,2))
 plot(mod.red)
@@ -135,6 +136,11 @@ par(mfrow=c(1,1))
 #anova computation
 anova(mod.full,mod.red)
 
+## poly
+###########
+mod.red.poly <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+                      I(bmi^2) + I(avg_glucose_level^2), family = binomial)
+summary(mod.red.poly)
 
 # how to detect Other gender
 # stroke_data[stroke_data$gender=='Other',]
@@ -275,6 +281,10 @@ plot(roc.out, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab
 coords(roc.out, "best")
 
 #RESOCONTO
-#ho provato sia il modello ridotto sia alcuni dei modelli con interazione (vi ho lasciato i tre i migliori, due sono commentati per fare le prove)
-#l'area sottostante la curva mi viene sempre circa 0.85, quindi direi che secondo la teoria il test Ã¨ moderatamente/abbastanza accurato (potere discriminante del test)
-#si ottiene di conseguenza un thresold molto piccolo circa 0.037
+#ho provato sia il modello ridotto sia alcuni dei modelli con interazione (vi ho lasciato i tre i migliori, 
+# due sono commentati per fare le prove)
+# AUC ~= 0.85, quindi direi che secondo la teoria il test e' moderatamente/abbastanza accurato 
+# (potere discriminante del test) si ottiene di conseguenza un thresold molto piccolo circa 0.037
+
+# nel caso dell'ictus è meglio avere FP rather than FN -> FNR basso
+ 
