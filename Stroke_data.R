@@ -5,7 +5,9 @@ names(stroke_data)
 summary(stroke_data)
 sum(is.na(stroke_data))
 
-# trasformazione variabili categoriche
+####################
+# 1. Preprocessing
+#####################
 stroke_data<-stroke_data[,-1]
 stroke_data$gender<- as.factor(stroke_data$gender)
 stroke_data$ever_married<-as.factor(stroke_data$ever_married)
@@ -58,18 +60,27 @@ box_plot_categories <- function(data, y){
 ##################################
 attach(stroke_data)
 ##################################
+
 #### Dataset biased 
 par(mfrow=c(1, 1))
 
 barplot(table(stroke_data$stroke)/dim(stroke_data)[1],
         xlab='probability to have a stroke')
+
+
 ############
+## 2. Descriptive Statistic
+############
+
 # box plots
+###########
 boxplot(avg_glucose_level, xlab= 'average glucose level')
 boxplot(bmi, xlab = 'body mass index')
 boxplot(age, xlab = 'age')
-##################################
-################################# Scatter plot ###################
+boxplot(avg_glucose_level~heart_disease)
+
+# Scatter plot
+################
 #plot(avg_glucose_level,bmi, pch=16,col=as.factor(stroke))
 library(ggplot2)
 ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
@@ -80,23 +91,21 @@ ggplot(stroke_data, aes(x = bmi, y = age,
                         col = as.factor(stroke))) + geom_point()
 par(mfrow=c(1,1))
 #boxplot(age~avg_glucose_level)
-############################## pair plot y~age
+
+# par plot y~*
+#################
 par(mfrow=c(1,1))
 plot(stroke~age)
 par(mfrow=c(2,1))
 plot(stroke~bmi)
 plot(stroke~avg_glucose_level)
 par(mfrow=c(1,1))
-##################################
-# PAIR PLOTS WITH histogram and correlation matrix
-#pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
-pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
-# Result pairswise plot with matrix correlation: Strong colinearity among:
-# age, worktype, and ever_married => When fitting they do not help and also are redundant dummy variable.
 
-# RESIDUAL PLOTS AND DIAGNOSTICS FOR LOGISTIC GLMs
-#########################################
-#Full Model
+
+# 3. Residual plots and diagnostic for logistic GLMs
+#################################################
+
+# a.Full Model
 #####
 mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
@@ -108,18 +117,20 @@ plot(mod.full.resid~predicted)
 abline(h=0)
 qqnorm(mod.full.resid)
 qqline(mod.full.resid)
+
 ######################
+
 par(mfrow=c(2,2))
 plot(mod.full)
 par(mfrow=c(1,1))
 
-##############################################
-#reduced model with age, hypertension, avg_glucose_level, bmi which are the variables with the highest level of significance
+
+# b. Reduced Model (with age, hypertension, avg_glucose_level, bmi which are the variables with the highest level of significance)
 #####
 mod.red <- glm(stroke~age + bmi + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 
-mod.red.resid <- residuals(mod.red, type="deviance") # because we have a binary response
+mod.red.resid <- residuals(mod.red, type="deviance")
 predicted <- predict(mod.red, type = "link")
 
 par(mfrow=c(1,2))
@@ -133,25 +144,13 @@ par(mfrow=c(2,2))
 plot(mod.red)
 par(mfrow=c(1,1))
 
-#anova computation
+# anova computation
 anova(mod.full,mod.red)
-
-## poly
-###########
-mod.red.poly <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
-                      I(bmi^2) + I(avg_glucose_level^2), family = binomial)
-summary(mod.red.poly)
-
-# how to detect Other gender
-# stroke_data[stroke_data$gender=='Other',]
-
-#############################
-# PAIRWISE INTERACTION BETWEEN: avg_glucose, age, bmi
-#############################
 
 ###################
 # F-statistic to see variance
 ###################
+
 var.test(age,avg_glucose_level) # low p-value -> relation
 var.test(age, hypertension) # low p-value -> relation
 var.test(hypertension,avg_glucose_level) # low p-value -> relation
@@ -159,7 +158,7 @@ var.test(age, heart_disease) # low p-value -> relation
 var.test(avg_glucose_level,heart_disease) # low p-value, very high F -> relation?
 var.test(age,bmi)
 
-#### forward model AND INTERACTIONS
+#### c. Mixed Model AND INTERACTIONS
 ####################
 mod1 <- glm(stroke~age, family=binomial)
 summary(mod1)
@@ -218,21 +217,40 @@ par(mfrow=c(2,2))
 plot(mod9)
 par(mfrow=c(1,1))
 
-boxplot(avg_glucose_level~heart_disease)
+## 3. polynomial model
+##############
+mod.red.poly <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+                      I(bmi^2) + I(avg_glucose_level^2), family = binomial)
+summary(mod.red.poly)
 
-# count the number table(hypertension, heart_disease)
+# how to detect Other gender
+# stroke_data[stroke_data$gender=='Other',]
+
+# 4. PAIR PLOTS WITH histogram and correlation matrix
+#################################################
+
+#pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
+pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
+# Result pairswise plot with matrix correlation: Strong colinearity among:
+# age, worktype, and ever_married => When fitting they do not help and also are redundant dummy variable.
+
+
+#count the number table(hypertension, heart_disease)
+
+# 5. LDA
 ###########################################
 #                   LDA
-#       Assumption: sample normally distributed and same variances, too strong assumption.
+# Assumption: sample normally distributed and same variances, too strong assumption.
 ############################################
 library(MASS)
 lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
 lda.pred <- predict(lda.fit)
 table(lda.pred$class, stroke)
 
+# 6.
 ###########################################
 #                   QDA
-#       Assumption: sample normally distributed and BOT NOT SAME variance among samples.
+# Assumption: sample normally distributed and BOT NOT SAME variance among samples.
 ############################################
 
 qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
@@ -243,7 +261,7 @@ qda.pred <- predict(qda.fit, stroke_data)
 
 table(qda.pred$class, stroke)
 
-
+# 7.
 ###########################################
 #             ROC CURVE
 ############################################

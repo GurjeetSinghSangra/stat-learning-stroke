@@ -15,8 +15,8 @@ stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
 attach(stroke_data)
 ```
 
-It is composed of 5,110 entries with a total of 12 columns: id, gender, age, hypertension, heart_diseas, ever_married, work_type, Residence_type, avg_glucose_level, bmi, smokin_status, stroke.
-Our aim is to see how the features were related to each other in order to predict which individual is more probable to get a stroke.
+It is composed of 5,110 entries with a total of 12 columns: id, gender, age, hypertension, heart_disease, ever_married, work_type, Residence_type, avg_glucose_level, bmi, smoking_status, stroke.
+Our aim is to see if and how the features are related to each other in order to predict which individual is more probable to get a stroke.
 The preliminary part of the analysis focuses on the study of the dataset, we remove the column which identify the singular individuals 
 ```{r}
 stroke_data<-stroke_data[,-1]
@@ -35,16 +35,42 @@ stroke_data$smoking_status<-as.factor(smoking_status)
 We discovered that the variable bmi was not numeric because of the presence of a string "N/A" which identifies the lack of the value, and so we transform it using the command `stroke_data$bmi <- as.numeric(bmi)`. We then removed those NA values:`stroke_data<- na.omit(stroke_data)`.
 We ended up having  4,909 entries and 11 total columns.
 Here we give a quick overview of the main information about the dataset:
+```{r,echo=FALSE, results=FALSE}
+stroke_data$bmi <- as.numeric(bmi)
+stroke_data<- na.omit(stroke_data)
+```
+
 
 ```{r}
 summary(stroke_data)
 ```
 
-## Including Plots
+```{r, results=FALSE}
+attach(stroke_data)
+```
 
-You can also embed plots, for example:
+A visual transformation of these values is provided in the following boxplots:
+```{r, fig.height=5, fig.width=8}
+par(mfrow=c(1,3))
+boxplot(avg_glucose_level, xlab= 'average glucose level' )
+boxplot(bmi, xlab = 'body mass index')
+boxplot(age, xlab = 'age',pch=20)
+par(mfrow=c(1,1))
+```
+Through the analysis on the Stroke dataset we discovered that it was strongly bias, in the sense that 209 people on a total of 4909 get a stroke:
+```{r, fig.height=3.5, fig.width=3.5}
+barplot(table(stroke)/dim(stroke_data)[1],
+        xlab='probability to have a stroke')
+```
+This value is representative of the real situation in which there are not many stroke cases compared with the whole population.
+At this point we can ask some questions:
 
-```{r pressure, echo=FALSE}
+* Is it possible to prevent ictus?
+* Which factors are the most related to it?
+* How strong are the relations between the features?
+
+
+```{r pressure, echo=FALSE, fig.height=3.5, fig.width=3.5}
 plot(pressure)
 ```
 
