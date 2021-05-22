@@ -321,4 +321,10 @@ best_recal = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), "cu
 # (potere discriminante del test) si ottiene di conseguenza un thresold molto piccolo circa 0.037
 
 # nel caso dell'ictus ? meglio avere FP rather than FN -> FNR basso
+# Allora ieri guardando i plot della ROC curve io e francesca c'eravamo posti due domande sui risultati.
+# Siccome siamo in un problema medico di predizione di ictus di un paziente oppure no, alla fine la ROC curve non e` molto d'aiuto perche massimizza i true positive con i true predicted. 
+# Questo significa che possibilmenete gli errori di false negativo possono incrementare.
+# In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
+# Noi vorremmo invece che il false negative sia basso e quindi considerato. 
+# Insomma significa che dobbiamo usare la Precision Recall curve.
  
