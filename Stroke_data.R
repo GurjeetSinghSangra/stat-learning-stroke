@@ -83,7 +83,13 @@ boxplot(avg_glucose_level~heart_disease)
 # pair plot y~ relevant feature
 #################
 par(mfrow=c(1,1))
+#age
 plot(stroke~age)
+stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke']
+table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])#/length(stroke.less.35)
+table(stroke.less.35 <- stroke_data[stroke_data$age>=35 & stroke_data$age<50 , 'stroke'])
+table(stroke.less.35 <- stroke_data[stroke_data$age>=50 , 'stroke'])
+
 par(mfrow=c(2,1))
 plot(stroke~bmi)
 plot(stroke~avg_glucose_level)
@@ -155,19 +161,30 @@ abline(h=0)
 qqnorm(mod.red.resid)
 qqline(mod.red.resid)
 
+par(mfrow=c(2,2))
+plot(mod.red)
+par(mfrow=c(1,1))
+# We can see from the residual vs predicted values the presence of high non-linearity in the dataset.
+# In the qqplot instead we see that residuals do no follow a normal distribution
+# Instead in the standard deviance vs predicted we can see that homoscedasticity does not hold since the 
+# line of the standard residual is not flat, hence even by standardizing the residual we end up having high
+# variance among residuals.
+# In the end by looking at the leverage plot, we see the presence of some sample with high leverage values (bottom right), which
+# could influence the prediction of the model. 
+# Buuut i don't know in which range of levarage value is considered to change a lot the prediction of the model.
+# Furthermore R does not show the index of the sample with high leverage, i guess because a lot of values could change the prediction.
+# Some outliers with high variance are: idx: 183, 246, 163
+
+View(stroke_data[c(163, 183, 246), ]) #very strange and rare case, but have high bmi value with low glucose. The 163 has age 1.32, why?
+###################
+
 #anova computation.
 anova(mod.full, mod.red, test="Chisq")
 # As expected from the anova test REJECTS that the complex model is more
 # significant than the reduced one, since the p-value is not less than 5%.
 # Hence the full model does not help with our prediction.
-
-
 ######################
-par(mfrow=c(2,2))
-plot(mod.red)
-par(mfrow=c(1,1))
 
-###################
 # F-statistic to see variance
 ###################
 
@@ -312,7 +329,7 @@ par(mfrow=c(1,1))
 pr_cutoffs <- data.frame(cut=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
                       precision=perf@y.values[[1]])
 pr_cutoffs[pr_cutoffs$recall>0.6, ]
-best_recal = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), "cut"] #da controllare insieme
+best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), "cut"] #da controllare insieme
 
 #RESOCONTO
 #ho provato sia il modello ridotto sia alcuni dei modelli con interazione (vi ho lasciato i tre i migliori, 
@@ -327,4 +344,18 @@ best_recal = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), "cu
 # In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
 # Noi vorremmo invece che il false negative sia basso e quindi considerato. 
 # Insomma significa che dobbiamo usare la Precision Recall curve.
+
+get.roc.recall.values <- function(pred_models, true_value) {
+  result <- vector(mode = "list", length = length(pred_models))
+  for (pred in pred_model) {
+    roc.res <- roc(true_value, pred, levels=c("0", "1"))
+    tmp.res  <- c(result, coords(roc.res, "best"))
+    pred.rec = prediction(mod.red.probs, stroke)
+    perf = performance(pred.rec, "prec", "rec")
+    pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
+                             precision=perf@y.values[[1]])
+    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
+    data.frame(best_recall)
+  }
+}
  
