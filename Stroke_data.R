@@ -64,9 +64,10 @@ attach(stroke_data)
 #### Dataset biased 
 par(mfrow=c(1, 1))
 
-barplot(table(stroke_data$stroke)/dim(stroke_data)[1],
+table(stroke)
+table(stroke)/dim(stroke_data)[1]
+barplot(table(stroke)/dim(stroke_data)[1],
         xlab='probability to have a stroke')
-
 
 ############
 ## 2. Descriptive Statistic
@@ -79,6 +80,15 @@ boxplot(bmi, xlab = 'body mass index')
 boxplot(age, xlab = 'age')
 boxplot(avg_glucose_level~heart_disease)
 
+# pair plot y~ relevant feature
+#################
+par(mfrow=c(1,1))
+plot(stroke~age)
+par(mfrow=c(2,1))
+plot(stroke~bmi)
+plot(stroke~avg_glucose_level)
+par(mfrow=c(1,1))
+
 # Scatter plot
 ################
 #plot(avg_glucose_level,bmi, pch=16,col=as.factor(stroke))
@@ -90,19 +100,16 @@ ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
 ggplot(stroke_data, aes(x = bmi, y = age,
                         col = as.factor(stroke))) + geom_point()
 par(mfrow=c(1,1))
-#boxplot(age~avg_glucose_level)
 
-# par plot y~*
-#################
-par(mfrow=c(1,1))
-plot(stroke~age)
-par(mfrow=c(2,1))
-plot(stroke~bmi)
-plot(stroke~avg_glucose_level)
-par(mfrow=c(1,1))
+# 3. PAIR PLOTS WITH histogram and correlation matrix
+#################################################
 
+#pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
+pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
+# Result pairswise plot with matrix correlation: Strong collinearity among:
+# age, worktype, and ever_married => When fitting they do not help and also are redundant dummy variable.
 
-# 3. Residual plots and diagnostic for logistic GLMs
+# 4. Residual plots and diagnostic for logistic GLMs
 #################################################
 
 # a.Full Model
@@ -124,8 +131,17 @@ par(mfrow=c(2,2))
 plot(mod.full)
 par(mfrow=c(1,1))
 
-
-# b. Reduced Model (with age, hypertension, avg_glucose_level, bmi which are the variables with the highest level of significance)
+####################
+# Basic feature selection using T statistics
+##### 
+# Reduced model 1 : We remove at least all the features that have collinearity between each other (work_type, ever_married)
+# and the residence type
+mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender, family=binomial) #
+summary(mod.red1)
+# Reduced model 2, Remove gender
+mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status, family=binomial) #
+summary(mod.red2)
+# Final Reduced Model (with age, hypertension, avg_glucose_level, bmi which are the variables with the highest level of significance)
 #####
 mod.red <- glm(stroke~age + bmi + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
@@ -139,13 +155,17 @@ abline(h=0)
 qqnorm(mod.red.resid)
 qqline(mod.red.resid)
 
+#anova computation.
+anova(mod.full, mod.red, test="Chisq")
+# As expected from the anova test REJECTS that the complex model is more
+# significant than the reduced one, since the p-value is not less than 5%.
+# Hence the full model does not help with our prediction.
+
+
 ######################
 par(mfrow=c(2,2))
 plot(mod.red)
 par(mfrow=c(1,1))
-
-# anova computation
-anova(mod.full,mod.red)
 
 ###################
 # F-statistic to see variance
@@ -219,28 +239,23 @@ par(mfrow=c(1,1))
 
 ## 3. polynomial model
 ##############
+mod.red.poly1 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+                       I(bmi^2), family = binomial)
+summary(mod.red.poly1)
+
+mod.red.poly2 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension
+                     + I(avg_glucose_level^2), family = binomial)
+summary(mod.red.poly2)
+
 mod.red.poly <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
 summary(mod.red.poly)
-
-# how to detect Other gender
-# stroke_data[stroke_data$gender=='Other',]
-
-# 4. PAIR PLOTS WITH histogram and correlation matrix
-#################################################
-
-#pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
-pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
-# Result pairswise plot with matrix correlation: Strong colinearity among:
-# age, worktype, and ever_married => When fitting they do not help and also are redundant dummy variable.
-
-
-#count the number table(hypertension, heart_disease)
+# Any polynomial term does not improve the result
 
 # 5. LDA
 ###########################################
 #                   LDA
-# Assumption: sample normally distributed and same variances, too strong assumption.
+# Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ############################################
 library(MASS)
 lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
@@ -250,7 +265,7 @@ table(lda.pred$class, stroke)
 # 6.
 ###########################################
 #                   QDA
-# Assumption: sample normally distributed and BOT NOT SAME variance among samples.
+# Assumption: sample are normally distributed BUT NOT SAME variance among classes.
 ############################################
 
 qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
@@ -263,7 +278,7 @@ table(qda.pred$class, stroke)
 
 # 7.
 ###########################################
-#             ROC CURVE
+#             ROC and RECALL-PRECISION CURVES
 ############################################
 
 # get the reduced model 
@@ -271,32 +286,33 @@ table(qda.pred$class, stroke)
 #mod.red <- glm(stroke~avg_glucose_level+hypertension+age+hypertension*age + heart_disease*avg_glucose_level+heart_disease*hypertension + bmi*age+bmi*avg_glucose_level, family = binomial  )
 #mod.red <- glm(stroke~age+avg_glucose_level +age*avg_glucose_level+hypertension+heart_disease+hypertension*age + heart_disease*avg_glucose_level+heart_disease*hypertension, data=stroke_data, family = binomial)
 mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, family = binomial)
-
 summary(mod.red)
-
 mod.red.probs <- predict(mod.red,type="response")
-
-# check some values
-mod.red.probs[1:50]
-
 # check the coding of contrasts
-stroke<-as.factor(stroke)
 contrasts(stroke)
-
 # review of the proportion between 1 and 0
 table(stroke)/length(stroke)
 
 # ROC curve
 library(pROC)
+library(ROCR) # Precision plot
 
+par(mfrow=c(1,1))
 # levels=controls (0's) as first element and cases (1's) as second
 roc.out <- roc(stroke, mod.red.probs, levels=c("0", "1"))
-
 # plot
 plot(roc.out, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
-
 # suggested threshold
 coords(roc.out, "best")
+
+pred.recall = prediction(mod.red.probs, stroke)
+perf = performance(pred.recall, "prec", "rec")
+plot(perf)
+par(mfrow=c(1,1))
+pr_cutoffs <- data.frame(cut=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
+                      precision=perf@y.values[[1]])
+pr_cutoffs[pr_cutoffs$recall>0.6, ]
+best_recal = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), "cut"] #da controllare insieme
 
 #RESOCONTO
 #ho provato sia il modello ridotto sia alcuni dei modelli con interazione (vi ho lasciato i tre i migliori, 
@@ -304,5 +320,5 @@ coords(roc.out, "best")
 # AUC ~= 0.85, quindi direi che secondo la teoria il test e' moderatamente/abbastanza accurato 
 # (potere discriminante del test) si ottiene di conseguenza un thresold molto piccolo circa 0.037
 
-# nel caso dell'ictus è meglio avere FP rather than FN -> FNR basso
+# nel caso dell'ictus ? meglio avere FP rather than FN -> FNR basso
  
