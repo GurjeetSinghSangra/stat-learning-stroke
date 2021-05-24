@@ -175,7 +175,7 @@ par(mfrow=c(1,1))
 # Furthermore R does not show the index of the sample with high leverage, i guess because a lot of values could change the prediction.
 # Some outliers with high variance are: idx: 183, 246, 163
 
-View(stroke_data[c(163, 183, 246), ]) #very strange and rare case, but have high bmi value with low glucose. The 163 has age 1.32, why?
+View(stroke_data[c("119","183","246"), ]) #very strange and rare case, but have high bmi value with low glucose. The 163 has age 1.32, why?
 ###################
 
 #anova computation.
@@ -197,58 +197,72 @@ var.test(age,bmi)
 
 #### c. Mixed Model AND INTERACTIONS
 ####################
+# we put a threshold for rejecting the variables on 0.1
 mod1 <- glm(stroke~age, family=binomial)
 summary(mod1)
 
 mod2 <- glm(stroke~age+avg_glucose_level+age*avg_glucose_level, family = binomial)
-summary(mod2) # -> age no correlated
+summary(mod2)
 
-# remove age*avg_glucose_level and 
-# add age
-mod3 <-glm(stroke~avg_glucose_level+hypertension + age,
-            family = binomial)
+# remove age*avg_glucose_level and avg_glucose_level
+# add hypertension
+mod3 <-glm(stroke ~ age + hypertension, family = binomial)
 summary(mod3) 
 
 # add hypertension*avg_glucose_level+hypertension*age
-mod4 <- glm(stroke~avg_glucose_level+age+hypertension+
+mod4 <- glm(stroke~age+hypertension+
               hypertension*avg_glucose_level+hypertension*age,
              family = binomial)
 summary(mod4)
 
 # remove hypertension*avg_glucose_level+hypertension*age 
 # add heart_disease
-mod5 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+age+
-            heart_disease, family = binomial)
+mod5 <- glm(stroke~age + hypertension +heart_disease, family = binomial)
 summary(mod5)
 
-
-# remove glucose_level*age
 # add hypertension*age + heart_disease*avg_glucose_level+ heart_disease*hypertension
-mod6 <- glm(stroke~age+avg_glucose_level +age*avg_glucose_level+hypertension+
-              heart_disease+hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension, family = binomial)
+mod6 <- glm(stroke~age + hypertension +
+              heart_disease + heart_disease*avg_glucose_level+
+              heart_disease*hypertension+ heart_disease*age, family = binomial)
 summary(mod6)
 
-
-# Da confrontare con R adjusted e validation test
-# Question: cosa cambia tra il 6 e il 7, no additive term of hear disease, why so big difference then?
-mod7 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
-              hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension, family = binomial)
+# remove heart_disease, heart_disease*hypertension + heart_disease*age
+# add bmi
+mod7 <- glm(stroke~age + hypertension + heart_disease*avg_glucose_level+ bmi, family = binomial)
 summary(mod7)
 
-# remove age*avg_glucose_level
-# add bmi
-mod8 <- glm(stroke~avg_glucose_level+hypertension+
-              hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension + bmi, family = binomial  )
+# remove bmi, heart_disease*avg_glucose_level
+# add bmi*age and bmi*hypertension (because most relevant variables)
+mod8 <- glm(stroke~ age + hypertension +
+              heart_disease*hypertension + heart_disease*age + bmi*age +
+              bmi*hypertension, family = binomial)
 summary(mod8)
 
-# remove bmi
-mod9 <- glm(stroke~avg_glucose_level+hypertension+age+
-              hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension + bmi*age+bmi*avg_glucose_level, family = binomial  )
+# remove bmi*hypertension,  bmi*age, heart_disease*hypertension
+mod9 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age, family = binomial)
 summary(mod9)
+
+# add smoking status
+mod10 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
+               smoking_status, family = binomial)
+summary(mod10)
+
+# remove smoking status
+# add 
+mod11 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
+               Residence_type, family = binomial)
+summary(mod11)
+
+
+# add gender 
+mod12 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
+gender, family = binomial)
+summary(mod12)
+
+# add gender 
+mod13 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
+               ever_married, family = binomial)
+summary(mod13)
 
 par(mfrow=c(2,2))
 plot(mod9)
