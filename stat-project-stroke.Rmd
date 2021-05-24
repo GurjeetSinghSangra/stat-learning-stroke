@@ -6,7 +6,7 @@ output:
   pdf_document: default
   html_document: default
 ---
-# Introduction
+# 1. Introduction
 
 In the following report we present the analysis computed on a particular disease, stroke, and its correlation to other factors such as smoking, glucose level, bmi and so on. 
 
@@ -24,7 +24,7 @@ In order to have a guide for the interpretation of the data we underline the fol
 * The normal values of glucose level are between 60 and 110 mg/dl and with a value greater than 126 mg/dl a person is considered diabetic;
 * a body mass index (BMI) between 18.5-24.9 indicates a normal/healthy weight, below 18.5 indicates underweight, 25.0-29.9 indicates overweight and above 30.0 indicates obese person 
 
-# Exploiting the Dataset
+# 2. Exploiting the Dataset
 
  The dataset we used was provided by kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset] and it is composed of 5,110 entries with a total of 12 columns: `id`, `gender`, `age`, `hypertension`, `heart_disease`, `ever_married`, `work_type`, `Residence_type`, `avg_glucose_level`, `bmi`, `smoking_status`, `stroke`.
 ```{r}
@@ -83,7 +83,7 @@ barplot(table(stroke)/dim(stroke_data)[1],
 
 This value is representative of the real situation in which there are not many stroke cases compared with the whole population. In Italy, for example, we have 200,000 cases over 59.226.539 people, i.e. 0.33%.
 
-# Searching for relationships
+# 3. Searching for Relationships
 At this point we can ask some questions:
 
 * Is it possible to prevent ictus?
@@ -122,8 +122,10 @@ par(mfrow=c(1,1))
 ```
 **discussione**
 
-# Analysis on models
-## Full and Reduced Models
+# 4. Analysis on models
+
+## 4.1 Full and Reduced Models
+
 ```{r}
 mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
@@ -140,7 +142,9 @@ abline(h=0, col='red')
 qqnorm(mod.full.resid)
 qqline(mod.full.resid, col='red')
 ```
-## Comparison between Reduced Models
+
+## 4.2 Comparison between Reduced Models
+
 ```{r}
 # Reduced model 1 : We remove at least all the features that have collinearity between 
 # each other (work_type, ever_married) and the residence type
@@ -182,71 +186,139 @@ In the end by looking at the leverage plot, we see the presence of some sample w
 
 *Buuut I don't know in which range of levarage value is considered to change a lot the prediction of the model.*
 Furthermore R does not show the index of the sample with high leverage, *I guess because a lot of values could change the prediction.*
-Some outliers with high variance are: idx: 183, 246, 163
+Some outliers with high variance are: idx: 119, 183, 246.
 
-## Mixed Approach for Models
-In order to see which variables were relevant on our research we tested various models usign the mixed approach: we started by the null model and then added variables and removed those with maximum p-value (which indicates low relationship with the `stroke` variable).
+Anova computation:
+```{r}
+anova(mod.full, mod.red, test="Chisq")
+```
+As expected from the anova test rejects that the complex model is more significant than the reduced one, since the p-value is not less than 5%. Hence the full model does not help with our prediction.
+
+Outliers:
+```{r}
+View(stroke_data[c("119","183","246"), ])
+```
+
+
+## 4.3 Mixed Approach for Models
+
+In order to see which variables were relevant on our research we tested various models usign the mixed approach: we started by the null model and then added variables and removed those with p-value over a threshold of 0.1 (which indicates low relationship with the `stroke` variable). In addition, we used the F-statistic to determine those variables that were in good relation, so they may contribute positively to the models:
+```{r, echo=FALSE}
+var.test(age,avg_glucose_level) 
+var.test(age, hypertension) 
+var.test(hypertension,avg_glucose_level)
+var.test(age, heart_disease)
+var.test(avg_glucose_level,heart_disease)
+var.test(age,bmi) 
+```
+All the p-values of the tests were above 2.2e-16 and so each of them were good relationships. Only the value of the F-statitic varied.
+
+We start with a simple model with the only iteration between `stroke` and `age`.
 ```{r}
 mod1 <- glm(stroke~age, family=binomial)
 summary(mod1)
 ```
+We then add the `avg_glucose_level` variable and also its interaction with `age`:
 ```{r, results='hide'}
 mod2 <- glm(stroke~age+avg_glucose_level+age*avg_glucose_level, family = binomial)
-summary(mod2) # -> age no correlated
-
-# remove age*avg_glucose_level and 
-# add age
-mod3 <-glm(stroke~avg_glucose_level+hypertension + age,
-            family = binomial)
+summary(mod2)
+```
+`avg_glucose_level*age` and `avg_glucose_level` have p-value over the threshold, so we remove them, then add `hypertension`:
+```{r, results='hide'}
+mod3 <-glm(stroke ~ age + hypertension, family = binomial)
 summary(mod3) 
-
-# add hypertension*avg_glucose_level+hypertension*age
-mod4 <- glm(stroke~avg_glucose_level+age+hypertension+
-              hypertension*avg_glucose_level+hypertension*age,
+```
+All the p-values makes the variables relevant so we keep all of them and we add the interaction between `hypertension` and `glucose_level` and `age`:
+```{r, echo=FALSE}
+mod4 <- glm(stroke~age+hypertension+ hypertension*avg_glucose_level+hypertension*age,
              family = binomial)
 summary(mod4)
+```
+We remove `hypertension*avg_glucose_level` and add `heart_disease`:
 
-# remove hypertension*avg_glucose_level+hypertension*age 
-# add heart_disease
-mod5 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+age+
-            heart_disease, family = binomial)
+```{r, results='hide'}
+mod5 <- glm(stroke~age + hypertension +heart_disease, family = binomial)
 summary(mod5)
-
-# remove glucose_level*age
-# add hypertension*age + heart_disease*avg_glucose_level + heart_disease*hypertension
-mod6 <- glm(stroke~age+avg_glucose_level +age*avg_glucose_level+hypertension+
-              heart_disease+hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension, family = binomial)
+```
+We add `heart_disease *avg_glucose_level + heart_disease*hypertension + heart_disease*age` 
+```{r, echo=FALSE}
+mod6 <- glm(stroke~age + hypertension + heart_disease + heart_disease*avg_glucose_level+
+              heart_disease*hypertension+ heart_disease*age, family = binomial)
 summary(mod6)
-
-
-# Da confrontare con R adjusted e validation test
-# Question: cosa cambia tra il 6 e il 7, no additive term of heart disease, why so big difference then?
-mod7 <- glm(stroke~avg_glucose_level+age*avg_glucose_level+hypertension+
-              hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension, family = binomial)
+```
+We can remove `heart_disease` because it has a p-value of 0.1925 but also `heart_disease*hypertension` and `heart_disease*age`. We go on adding `bmi`:
+```{r, echo=FALSE}
+mod7 <- glm(stroke~age + hypertension + heart_disease*avg_glucose_level+ bmi, family = binomial)
 summary(mod7)
-
-# remove age*avg_glucose_level
-# add bmi
-mod8 <- glm(stroke~avg_glucose_level+hypertension+
-              hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension + bmi, family = binomial  )
+```
+We remove `bmi` because it has a p-value of 0.68868 and  also `heart_disease*avg_glucose_level` and add its relation with `age` and `hypertension` because they are the most relavant variables:
+```{r, echo=FALSE}
+mod8 <- glm(stroke~ age + hypertension + heart_disease*hypertension +
+               heart_disease*age + bmi*age + bmi*hypertension, family = binomial)
 summary(mod8)
 ```
-
+ We remove them plus and left the model with:
 ```{r}
-# remove bmi
-mod9 <- glm(stroke~avg_glucose_level+hypertension+age+
-              hypertension*age + heart_disease*avg_glucose_level+
-              heart_disease*hypertension + bmi*age+bmi*avg_glucose_level, family = binomial  )
+mod9 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age, 
+            family = binomial)
 summary(mod9)
 ```
-Let's see some relevant information, such as outliers, leverage point and collinearity through some plots:
+
+We can also try with the categorical variables but actually the results do not change, so we keep this `mod9`.
+
+Let's now see some relevant information, such as outliers, leverage point and collinearity through some plots:
 ```{r,fig.height=3, fig.width=4}
 par(mfrow=c(2,2))
 #plot(mod9)
 par(mfrow=c(1,1))
+```
+
+## 4.4 Polynomial models
+
+We try to use a polynomial model using the numerical variables with degree 2.
+```{r}
+mod.red.poly1 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+                       I(bmi^2), family = binomial)
+summary(mod.red.poly1)
+
+mod.red.poly2 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension
+                     + I(avg_glucose_level^2), family = binomial)
+summary(mod.red.poly2)
+
+mod.red.poly <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+                      I(bmi^2) + I(avg_glucose_level^2), family = binomial)
+summary(mod.red.poly)
+```
+Nothing interesting with polynomial models. No improvement in the results.
+
+# 5. LDA
+
+Assumption: samples are normally distributed and have same variance in every class => strong assumption.
+```{r}
+library(MASS)
+lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
+lda.pred <- predict(lda.fit)
+table(lda.pred$class, stroke)
+```
+
+# 6. QDA
+
+Assumption: sample are normally distributed BUT NOT SAME variance among classes.
+```{r}
+qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
+# ERROR rank deficiency, i.e. some variables 
+# are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
+qda.pred <- predict(qda.fit, stroke_data)
+#TODO: Calculate deviance and standardize deviance
+
+table(qda.pred$class, stroke)
+```
+
+# 7. ROC and RECALL-PRECISION CURVES
+
+```{r}
+library(pROC)
+library(ROCR)
 ```
 
 
