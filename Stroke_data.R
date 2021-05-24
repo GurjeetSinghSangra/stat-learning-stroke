@@ -16,7 +16,7 @@ stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
 stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
 
 # modifiche a bmi
-stroke_data$bmi <- as.numeric(stroke_data$bmi)
+stroke_data$bmi <- as.numeric(stroke_data$bmi)# A warning has to be shown for N/A values which has to be map in NAs values. In case this warning is not shown, update R version to 4.__
 stroke_data<- na.omit(stroke_data)
 
 summary(stroke_data)
