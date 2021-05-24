@@ -248,18 +248,19 @@ mod10 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
 summary(mod10)
 
 # remove smoking status
-# add 
+# add Residence_type
 mod11 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
                Residence_type, family = binomial)
 summary(mod11)
 
-
+# remove Residence_type
 # add gender 
 mod12 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
 gender, family = binomial)
 summary(mod12)
 
-# add gender 
+# remove gendere
+# add ever_married 
 mod13 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
                ever_married, family = binomial)
 summary(mod13)
