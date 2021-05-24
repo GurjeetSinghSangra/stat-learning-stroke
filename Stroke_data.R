@@ -127,9 +127,9 @@ predicted <- predict(mod.full, type = "link")
 
 par(mfrow=c(1,2))
 plot(mod.full.resid~predicted)
-abline(h=0)
+abline(h=0, col='red')
 qqnorm(mod.full.resid)
-qqline(mod.full.resid)
+qqline(mod.full.resid, col='red')
 
 ######################
 
@@ -157,9 +157,9 @@ predicted <- predict(mod.red, type = "link")
 
 par(mfrow=c(1,2))
 plot(mod.red.resid~predicted)
-abline(h=0)
+abline(h=0, col='red')
 qqnorm(mod.red.resid)
-qqline(mod.red.resid)
+qqline(mod.red.resid, col='red')
 
 par(mfrow=c(2,2))
 plot(mod.red)
