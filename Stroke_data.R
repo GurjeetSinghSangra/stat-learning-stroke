@@ -293,6 +293,7 @@ library(MASS)
 lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
 lda.pred <- predict(lda.fit)
 table(lda.pred$class, stroke)
+lda.pred.stroke <- lda.pred$posterior[, 2]
 
 # 6.
 ###########################################
@@ -304,7 +305,7 @@ qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoki
 # ERROR rank deficiency, i.e. some variables 
 # are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
 qda.pred <- predict(qda.fit, stroke_data)
-#TODO: Calculate deviance and standardize deviance
+qda.pred.stroke <- qda.pred$posterior[, 2]
 
 table(qda.pred$class, stroke)
 
@@ -329,6 +330,48 @@ table(stroke)/length(stroke)
 library(pROC)
 library(ROCR) # Precision plot
 
+################ SUPER MEGA FUNZIONE CHE CALCOLA TUTTO #################
+get.roc.recall.values <- function(pred_models, true_value) {
+  result <- data.frame(Threshold1=double(), Specificity=double(), Sensitivity=double(),
+                       Threshold2=double(), Recall=double(), Precision=double())
+  n_models = length(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke))
+  par(mfrow=c(n_models, 2))
+  for (pred in pred_models) {
+    roc.res <- roc(true_value, pred, levels=c("0", "1"))
+    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
+    
+    tmp.res  <- coords(roc.res, "best")
+    pred.rec = prediction(mod.red.probs, stroke)
+    perf = performance(pred.rec, "prec", "rec")
+    plot(perf)
+    pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
+                             precision=perf@y.values[[1]])
+    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
+    
+    result[nrow(result) + 1,] = c(tmp.res[1, 1], tmp.res[1, 2], tmp.res[1, 3], 
+                                  best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
+  }
+  par(mfrow=c(1, 1))
+  return(result)
+}
+
+
+res = get.roc.recall.values(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke), stroke)
+View(res)
+recall_thresholds = res$Threshold2
+
+#################### RECALL prediction for all models
+mod.red.probs.class = as.numeric(mod.red.probs >= recall_thresholds[1])
+table(mod.red.probs.class, stroke)
+
+lda.stroke.class = as.numeric(lda.pred.stroke >= recall_thresholds[2])
+table(lda.stroke.class, stroke)
+
+qda.stroke.class = as.numeric(qda.pred.stroke >= recall_thresholds[3])
+table(qda.stroke.class, stroke)
+
+
+############################## MAYBE TO REMOVE EVERYTHING BELOW ########################
 par(mfrow=c(1,1))
 # levels=controls (0's) as first element and cases (1's) as second
 roc.out <- roc(stroke, mod.red.probs, levels=c("0", "1"))
@@ -344,7 +387,7 @@ par(mfrow=c(1,1))
 pr_cutoffs <- data.frame(cut=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
                       precision=perf@y.values[[1]])
 pr_cutoffs[pr_cutoffs$recall>0.6, ]
-best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), "cut"] #da controllare insieme
+best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ] #da controllare insieme
 
 #RESOCONTO
 #ho provato sia il modello ridotto sia alcuni dei modelli con interazione (vi ho lasciato i tre i migliori, 
@@ -359,18 +402,3 @@ best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), "c
 # In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
 # Noi vorremmo invece che il false negative sia basso e quindi considerato. 
 # Insomma significa che dobbiamo usare la Precision Recall curve.
-
-get.roc.recall.values <- function(pred_models, true_value) {
-  result <- vector(mode = "list", length = length(pred_models))
-  for (pred in pred_model) {
-    roc.res <- roc(true_value, pred, levels=c("0", "1"))
-    tmp.res  <- c(result, coords(roc.res, "best"))
-    pred.rec = prediction(mod.red.probs, stroke)
-    perf = performance(pred.rec, "prec", "rec")
-    pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
-                             precision=perf@y.values[[1]])
-    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
-    data.frame(best_recall)
-  }
-}
- 
