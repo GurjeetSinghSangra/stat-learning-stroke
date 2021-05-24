@@ -402,3 +402,101 @@ best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ] 
 # In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
 # Noi vorremmo invece che il false negative sia basso e quindi considerato. 
 # Insomma significa che dobbiamo usare la Precision Recall curve.
+
+
+
+###MODEL SELECTION 
+
+##################################################
+# Reduced model vx the best mixed model
+###################################################
+n <- dim(stroke_data)[1]
+n
+
+mod.red <- glm(stroke~age + bmi + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
+summary(mod.red)
+
+mod9 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age, family = binomial)
+summary(mod9)
+
+# RSS
+RSS.mod.red <- sum(residuals(mod.red)^2)
+RSS.mod.red
+
+RSS.mod9 <- sum(residuals(mod9)^2)
+RSS.mod9
+
+
+#1
+# Mallow's Cp
+##########################
+
+#per calcolare sigma2 riprendo mod.full
+mod.full <- glm(stroke~., data=stroke_data, family = binomial)
+
+sigma2.full <- sum(residuals(mod.full)^2)/(n-29)
+sigma2.full
+Cp.mod.red <- (RSS.mod.red+ 2*4*sigma2.full)/n
+Cp.mod9  <- (RSS.mod9+ 2*3*sigma2.full)/n
+Cp.mod.red
+Cp.mod9
+
+##con Mallow's cp ---> vince mod9
+
+#2
+# AIC
+############################
+
+AIC(mod.red)
+AIC(mod9)
+
+#3
+# BIC
+############################
+
+BIC(mod.red)
+BIC(mod9)
+
+
+#con AIC ----> vince mod9 a conferma che AIC e mallow sono scelgono lo stesso modello
+#con BIC ----> vince mod.red
+
+
+#AIC e BIC non ho utilizzato le formule del codice del professore 
+#perchè in quel caso (dataset Credit) gli errori seguivano un andamento gaussiano
+
+#quindi non ho potuto usare log(RSS/n) come valore della funzione di log-verosomiglianza
+#ho usato direttamente la funzione di R
+
+#4
+# R^2  and adjusted R^2
+##############################à
+
+# Total Sum of Squares
+#TSS1 = sum((stroke-mean(stroke))^2)
+TSS <- var(stroke)*(n-1)
+TSS
+
+# R^2
+
+R2.mod.red <- 1- RSS.mod.red/TSS
+R2.mod.red
+
+R2.mod9 <- 1 - RSS.mod9/TSS
+R2.mod9 
+
+# adjusted R^2
+
+R2.adj.mod.red <- 1- (RSS.mod.red/TSS)*((n-1)/(n-4-1))
+R2.adj.mod.red
+
+R2.adj.mod9 <- 1 - (RSS.mod9/TSS)*((n-1)/(n-3-1))
+R2.adj.mod9
+
+#!!! WARNING: QUI C'E' UN PROBLEMA
+#R^2 VIENE NEGATIVO DI CONSEGUENZA ANCHE R^2adjusted!
+#OVVIAMENTE NON VA BENE PERCHE' IL COEFF. DI DETERMINAZIONE R^2
+#DEVE ESSERE COMPRESO TRA 0 E 1 
+#CAPIRE SE AVENDO UNA "BINARY RESPONSE" PUO' ESSERE CHE RSS > TSS
+
+
