@@ -3,8 +3,8 @@ title: "Statistical Learning Project"
 author: " Filippo Santin, Gurjeet Singh, Francesca Zen"
 date: "18/5/2021"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 # 1. Introduction
 
@@ -89,11 +89,11 @@ At this point we can ask some questions:
 * Is it possible to prevent ictus?
 * Which factors are the most related to it?
 * How strong are the relations between the features?
+* Are the given variables enough to predict a good accuracy of some possible person affected by ictus?
 
 We will explore the data trying to answer them.
 
-First of all we look at some intuitive relation between 
-`stroke` and `age`,`bmi` and `avg_glucose_level`:
+First of all we look at some intuitive relation between `stroke` and `age`,`bmi` and `avg_glucose_level`:
 ```{r, echo=FALSE}
 par(mfrow=c(3,1))
 ```
@@ -124,6 +124,8 @@ par(mfrow=c(1,1))
 
 # 4. Analysis on models
 
+While going on with the classification using logistic regression we could meet the following problems: non-linearity of the data, correlation of errorterms, heteroschedasticity, outliers, leverage point and collinearity.
+
 ## 4.1 Full and Reduced Models
 
 ```{r}
@@ -142,6 +144,7 @@ abline(h=0, col='red')
 qqnorm(mod.full.resid)
 qqline(mod.full.resid, col='red')
 ```
+The residual plots aare not satisfactory. From the right plot we can see that the data are not normal.
 
 ## 4.2 Comparison between Reduced Models
 
