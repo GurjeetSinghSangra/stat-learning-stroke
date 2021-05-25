@@ -285,15 +285,19 @@ library(ROCR) # Precision plot
 
 ################ SUPER MEGA FUNZIONE CHE CALCOLA TUTTO #################
 get.roc.recall.values <- function(pred_models, true_value) {
-  result <- data.frame(Threshold1=double(), Specificity=double(), Sensitivity=double(),
-                       Threshold2=double(), Recall=double(), Precision=double())
+  result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
+                       Thr.Prec.Rec=double(), Recall=double(), Precision=double())
   n_models = length(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke))
   par(mfrow=c(n_models, 2))
   for (pred in pred_models) {
+    ### ROC
     roc.res <- roc(true_value, pred, levels=c("0", "1"))
     plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
     
-    tmp.res  <- coords(roc.res, "best")
+    best.roc  <- coords(roc.res, "best")
+    ###
+    
+    ### PREC-REC
     pred.rec = prediction(mod.red.probs, true_value)
     perf = performance(pred.rec, "prec", "rec")
     plot(perf)
@@ -301,18 +305,17 @@ get.roc.recall.values <- function(pred_models, true_value) {
                              precision=perf@y.values[[1]])
     best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
     
-    result[nrow(result) + 1,] = c(tmp.res[1, 1], tmp.res[1, 2], tmp.res[1, 3], 
+    result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
                                   best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
   }
   par(mfrow=c(1, 1))
   return(result)
 }
 
-
 res = get.roc.recall.values(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke), stroke)
-View(res)
-recall_thresholds = res$Threshold2 # precision-recall
-roc_thresholds = res$Threshold1
+print(res)
+recall_thresholds = res$Thr.Prec.Rec # precision-recall
+roc_thresholds = res$Thr.ROC
 
 #################### RECALL prediction for all models
 mod.red.probs.class = as.numeric(mod.red.probs >= recall_thresholds[1])
