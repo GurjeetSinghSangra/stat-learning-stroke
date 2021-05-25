@@ -390,7 +390,7 @@ best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ] 
 #1
 # AIC
 ############################
-# AIC è più adeguato ad una realtà sconosciuta e a dimensionalità elevata
+# AIC ? pi? adeguato ad una realt? sconosciuta e a dimensionalit? elevata
 AIC(mod.red)
 AIC(mod1)
 
@@ -511,3 +511,18 @@ coef(best.mod, 8)
 # 75% train: 3682 - 25% test
 # di questo 75% ne prendiamo 120 di stroke
 # 3562 without stroke
+no.strokes.data <- stroke_data[stroke == 0, ]
+rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
+
+yes.strokes.data <- stroke_data[stroke == 1, ]
+rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
+
+training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
+training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
+shuffle <- sample(nrow(training.set)) #shuffle the dataset, since the strokes are added in the last positions
+training.set <- training.set[shuffle, ]
+
+val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
+val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
+shuffle <- sample(nrow(val.set)) #shuffle the dataset, since the strokes are added in the last positions
+val.set <- val.set[shuffle, ]
