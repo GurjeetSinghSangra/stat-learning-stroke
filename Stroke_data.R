@@ -290,7 +290,8 @@ summary(mod.red.poly)
 # Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ############################################
 library(MASS)
-lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
+lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender
+               +smoking_status+ever_married+Residence_type + heart_disease)
 lda.pred <- predict(lda.fit)
 table(lda.pred$class, stroke)
 lda.pred.stroke <- lda.pred$posterior[, 2]
@@ -321,10 +322,6 @@ table(qda.pred$class, stroke)
 mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, family = binomial)
 summary(mod.red)
 mod.red.probs <- predict(mod.red,type="response")
-# check the coding of contrasts
-contrasts(stroke)
-# review of the proportion between 1 and 0
-table(stroke)/length(stroke)
 
 # ROC curve
 library(pROC)
@@ -341,7 +338,7 @@ get.roc.recall.values <- function(pred_models, true_value) {
     plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
     
     tmp.res  <- coords(roc.res, "best")
-    pred.rec = prediction(mod.red.probs, stroke)
+    pred.rec = prediction(mod.red.probs, true_value)
     perf = performance(pred.rec, "prec", "rec")
     plot(perf)
     pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
@@ -358,18 +355,24 @@ get.roc.recall.values <- function(pred_models, true_value) {
 
 res = get.roc.recall.values(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke), stroke)
 View(res)
-recall_thresholds = res$Threshold2
+recall_thresholds = res$Threshold2 # precision-recall
+roc_thresholds = res$Threshold1
 
 #################### RECALL prediction for all models
 mod.red.probs.class = as.numeric(mod.red.probs >= recall_thresholds[1])
 table(mod.red.probs.class, stroke)
+mod.red.probs.class = as.numeric(mod.red.probs >= roc_thresholds[1])
+table(mod.red.probs.class, stroke)
 
 lda.stroke.class = as.numeric(lda.pred.stroke >= recall_thresholds[2])
+table(lda.stroke.class, stroke)
+lda.stroke.class = as.numeric(lda.pred.stroke >= roc_thresholds[2])
 table(lda.stroke.class, stroke)
 
 qda.stroke.class = as.numeric(qda.pred.stroke >= recall_thresholds[3])
 table(qda.stroke.class, stroke)
-
+qda.stroke.class = as.numeric(qda.pred.stroke >= roc_thresholds[3])
+table(qda.stroke.class, stroke)
 
 ############################## MAYBE TO REMOVE EVERYTHING BELOW ########################
 par(mfrow=c(1,1))
