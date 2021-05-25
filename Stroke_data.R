@@ -147,7 +147,7 @@ summary(mod.red1)
 # Reduced model 2, Remove gender
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status  + heart_disease, family=binomial) #
 summary(mod.red2)
-# Final Reduced Model (with age, hypertension, avg_glucose_level which are the variables with the highest level of significance)
+# Final Reduced Model (with age, hypertension, avg_glucose_level, heart_disease )
 #####
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
@@ -175,7 +175,7 @@ par(mfrow=c(1,1))
 # Furthermore R does not show the index of the sample with high leverage, i guess because a lot of values could change the prediction.
 # Some outliers with high variance are: idx: 183, 246, 163
 
-View(stroke_data[c("119","183","246"), ]) #very strange and rare case, but have high bmi value with low glucose. The 163 has age 1.32, why?
+View(stroke_data[c("246","183","119"), ]) 
 ###################
 
 #anova computation.
@@ -195,48 +195,63 @@ var.test(age, heart_disease) # low p-value -> relation
 var.test(avg_glucose_level,heart_disease) # low p-value, very high F -> relation?
 var.test(age,bmi)
 
-#### c. Mixed Model AND INTERACTIONS
+#### c. Mixed Model AND Interaction
 ####################
-# we put a threshold for rejecting the variables on 0.1
-
+# le scelte fatte sono state guidate da p-value con almeno il punto
 # mod.red is our starting model
-summary(mod.red)
+summary(mod.red) # AIC=1384.6
 
 # let's procede with the iteraction:
-# 1. age*heart_disease
-mod2 <- glm(stroke~age + avg_glucose_level+ heart_disease+
-              hypertension + age*heart_disease, family=binomial)
-summary(mod2)
-# could be a little relevant
+# 1. age*~
+mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
+               age*heart_disease, family=binomial)
+summary(mod1) # AIC = 1384
 
-# 2. avg_glucose_level*hypertension
-mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+
-hypertension + age*heart_disease+avg_glucose_level*hypertension, 
-family=binomial)
-summary(mod3)
+# 2. avg_glucose_level*~
+mod2 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension +
+              avg_glucose_level*hypertension, family=binomial)
+summary(mod2) # AIC = 1385.9
 
-mod4 <- glm(stroke~age + avg_glucose_level+ heart_disease+
-              hypertension +avg_glucose_level*hypertension, 
-            family=binomial)
-summary(mod4)
+# 3. heart_disease*hypertension
+mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension + 
+            heart_disease*hypertension, family=binomial)
+summary(mod3) # AIC = 1384.5
+
+# 4. from mod.red we remove heart_disease and add
+# 4.1 add age*~
+mod4 <- glm(stroke~age + avg_glucose_level + hypertension + 
+              age*hypertension, family=binomial)
+summary(mod4) # winner for 4: AIC= 1386.2
+
+# 4.2 add avg_glucose_level*hypertension
+mod5 <- glm(stroke~age + avg_glucose_level + hypertension + 
+              avg_glucose_level*hypertension, family=binomial)
+summary(mod5)
+
+# 5. sommiamo le 2 best: mod1 e mod3
+mod6 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
+              age*heart_disease + heart_disease*hypertension, family=binomial)
+summary(mod6)
 
 par(mfrow=c(2,2))
 plot(mod1)
 par(mfrow=c(1,1))
 
-## 3. polynomial model
+View(stroke_data[c("207","150","100"), ])
+
+## d. polynomial model
 ##############
-mod.red.poly1 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+mod.poly1 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
-summary(mod.red.poly1)
+summary(mod.poly1)
 
-mod.red.poly2 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension
+mod.poly2 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                      + I(avg_glucose_level^2), family = binomial)
-summary(mod.red.poly2)
+summary(mod.poly2)
 
-mod.red.poly <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+mod.poly3 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
-summary(mod.red.poly)
+summary(mod.poly3)
 # Any polynomial term does not improve the result
 
 # 5. LDA
@@ -371,55 +386,23 @@ best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ] 
 ##################################################
 # Reduced model vx the best mixed model
 ###################################################
-n <- dim(stroke_data)[1]
-n
-
-mod.red <- glm(stroke~age + bmi + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
-summary(mod.red)
-
-mod9 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age, family = binomial)
-summary(mod9)
-
-# RSS
-RSS.mod.red <- sum(residuals(mod.red)^2)
-RSS.mod.red
-
-RSS.mod9 <- sum(residuals(mod9)^2)
-RSS.mod9
-
 
 #1
-# Mallow's Cp
-##########################
-
-#per calcolare sigma2 riprendo mod.full
-mod.full <- glm(stroke~., data=stroke_data, family = binomial)
-
-sigma2.full <- sum(residuals(mod.full)^2)/(n-29)
-sigma2.full
-Cp.mod.red <- (RSS.mod.red+ 2*4*sigma2.full)/n
-Cp.mod9  <- (RSS.mod9+ 2*4*sigma2.full)/n
-Cp.mod.red
-Cp.mod9
-
-##con Mallow's cp ---> vince mod9
-
-#2
 # AIC
 ############################
-
+# AIC è più adeguato ad una realtà sconosciuta e a dimensionalità elevata
 AIC(mod.red)
-AIC(mod9)
+AIC(mod1)
 
-#3
+#2
 # BIC
 ############################
-
+# BIC viene utilizzato per modelli semplici e "veri"
 BIC(mod.red)
-BIC(mod9)
+BIC(mod1)
+BIC(mod3)
 
-
-#con AIC ----> vince mod9 a conferma che AIC e mallow sono scelgono lo stesso modello
+#con AIC ----> vince mod2 a conferma che AIC e mallow sono scelgono lo stesso modello
 #con BIC ----> vince mod.red
 
 
@@ -428,31 +411,6 @@ BIC(mod9)
 
 #quindi non ho potuto usare log(RSS/n) come valore della funzione di log-verosomiglianza
 #ho usato direttamente la funzione di R
-
-#4
-# R^2  and adjusted R^2
-##############################
-
-# Total Sum of Squares
-#TSS1 = sum((stroke-mean(stroke))^2)
-TSS <- var(stroke)*(n-1)
-TSS
-
-# R^2
-
-R2.mod.red <- 1- RSS.mod.red/TSS
-R2.mod.red
-
-R2.mod9 <- 1 - RSS.mod9/TSS
-R2.mod9 
-
-# adjusted R^2
-
-R2.adj.mod.red <- 1- (RSS.mod.red/TSS)*((n-1)/(n-4-1))
-R2.adj.mod.red
-
-R2.adj.mod9 <- 1 - (RSS.mod9/TSS)*((n-1)/(n-3-1))
-R2.adj.mod9
 
 #!!! WARNING: QUI C'E' UN PROBLEMA
 #R^2 VIENE NEGATIVO DI CONSEGUENZA ANCHE R^2adjusted!
