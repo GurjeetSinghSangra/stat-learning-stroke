@@ -147,9 +147,9 @@ summary(mod.red1)
 # Reduced model 2, Remove gender
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status, family=binomial) #
 summary(mod.red2)
-# Final Reduced Model (with age, hypertension, avg_glucose_level, bmi which are the variables with the highest level of significance)
+# Final Reduced Model (with age, hypertension, avg_glucose_level which are the variables with the highest level of significance)
 #####
-mod.red <- glm(stroke~age + bmi + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
+mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 
 mod.red.resid <- residuals(mod.red, type="deviance")
@@ -198,75 +198,20 @@ var.test(age,bmi)
 #### c. Mixed Model AND INTERACTIONS
 ####################
 # we put a threshold for rejecting the variables on 0.1
-mod1 <- glm(stroke~age, family=binomial)
+# starting reduced model
+mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+
+              hypertension, family=binomial)
 summary(mod1)
 
-mod2 <- glm(stroke~age+avg_glucose_level+age*avg_glucose_level, family = binomial)
+# let's procede with the iteraction:
+# age and ...
+mod2 <- glm(stroke~age + avg_glucose_level+ heart_disease+
+              hypertension, family=binomial)
 summary(mod2)
 
-# remove age*avg_glucose_level and avg_glucose_level
-# add hypertension
-mod3 <-glm(stroke ~ age + hypertension, family = binomial)
-summary(mod3) 
-
-# add hypertension*avg_glucose_level+hypertension*age
-mod4 <- glm(stroke~age+hypertension+
-              hypertension*avg_glucose_level+hypertension*age,
-             family = binomial)
-summary(mod4)
-
-# remove hypertension*avg_glucose_level+hypertension*age 
-# add heart_disease
-mod5 <- glm(stroke~age + hypertension +heart_disease, family = binomial)
-summary(mod5)
-
-# add hypertension*age + heart_disease*avg_glucose_level+ heart_disease*hypertension
-mod6 <- glm(stroke~age + hypertension +
-              heart_disease + heart_disease*avg_glucose_level+
-              heart_disease*hypertension+ heart_disease*age, family = binomial)
-summary(mod6)
-
-# remove heart_disease, heart_disease*hypertension + heart_disease*age
-# add bmi
-mod7 <- glm(stroke~age + hypertension + heart_disease*avg_glucose_level+ bmi, family = binomial)
-summary(mod7)
-
-# remove bmi, heart_disease*avg_glucose_level
-# add bmi*age and bmi*hypertension (because most relevant variables)
-mod8 <- glm(stroke~ age + hypertension +
-              heart_disease*hypertension + heart_disease*age + bmi*age +
-              bmi*hypertension, family = binomial)
-summary(mod8)
-
-# remove bmi*hypertension,  bmi*age, heart_disease*hypertension
-mod9 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age, family = binomial)
-summary(mod9)
-
-# add smoking status
-mod10 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
-               smoking_status, family = binomial)
-summary(mod10)
-
-# remove smoking status
-# add Residence_type
-mod11 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
-               Residence_type, family = binomial)
-summary(mod11)
-
-# remove Residence_type
-# add gender 
-mod12 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
-gender, family = binomial)
-summary(mod12)
-
-# remove gendere
-# add ever_married 
-mod13 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age+
-               ever_married, family = binomial)
-summary(mod13)
 
 par(mfrow=c(2,2))
-plot(mod9)
+plot(mod1)
 par(mfrow=c(1,1))
 
 ## 3. polynomial model
@@ -440,7 +385,7 @@ mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 sigma2.full <- sum(residuals(mod.full)^2)/(n-29)
 sigma2.full
 Cp.mod.red <- (RSS.mod.red+ 2*4*sigma2.full)/n
-Cp.mod9  <- (RSS.mod9+ 2*3*sigma2.full)/n
+Cp.mod9  <- (RSS.mod9+ 2*4*sigma2.full)/n
 Cp.mod.red
 Cp.mod9
 
@@ -567,10 +512,10 @@ library(leaps)
 best.mod <- regsubsets(stroke~., stroke_data)
 summary(best.mod)
 
-# best model includes: age, avg_glucose_leve, heart_disease, hypertension 
+# best model includes: age, avg_glucose_level, heart_disease, hypertension 
 # as relevant variables
 
-reg.summary <- summary(best.mod)
+reg.summary <- summary(best.mod, nvar=5)
 names(reg.summary)
 par(mfrow=c(2,2))
 plot(reg.summary$rss, xlab="number of variables", ylab= "RSS", type='l')
@@ -587,3 +532,11 @@ plot(best.mod, scale='Cp')
 plot(best.mod, scale='bic')
 
 coef(best.mod, 8)
+
+
+################# TRAINING AND VALIDATION SETS ############
+# sum(stroke_data$stroke==0) --> 4700
+# sum(stroke_data$stroke==1) --> 209
+# 75% train: 3682 - 25% test
+# di questo 75% ne prendiamo 120 di stroke
+# 3562 without stroke

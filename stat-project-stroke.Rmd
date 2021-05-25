@@ -3,8 +3,8 @@ title: "Statistical Learning Project"
 author: " Filippo Santin, Gurjeet Singh, Francesca Zen"
 date: "18/5/2021"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 # 1. Introduction
 
@@ -151,17 +151,16 @@ The residual plots aare not satisfactory. From the right plot we can see that th
 ```{r}
 # Reduced model 1 : We remove at least all the features that have collinearity between 
 # each other (work_type, ever_married) and the residence type
-mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status +
-                  gender, family=binomial) 
+mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender, family=binomial) 
 summary(mod.red1)
 # Reduced model 2: remove gender
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status, family=binomial)
 summary(mod.red2)
 # Final Reduced Model
-mod.red <- glm(stroke~age + bmi + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
+mod.red <- glm(stroke~age + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 ```
-The `mod.red` has `age`, `hypertension`, `avg_glucose_level`, `bmi` as the variables with the highest level of significance.
+The `mod.red` has `age`, `hypertension`, `avg_glucose_level` as the variables with the highest level of significance.
 
 ```{r}
 mod.red.resid <- residuals(mod.red, type="deviance")
@@ -299,9 +298,11 @@ Nothing interesting with polynomial models. No improvement in the results.
 Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ```{r}
 library(MASS)
-lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender+smoking_status)
+lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender
+               +smoking_status+ever_married+Residence_type + heart_disease)
 lda.pred <- predict(lda.fit)
 table(lda.pred$class, stroke)
+lda.pred.stroke <- lda.pred$posterior[, 2]
 ```
 
 # 6. QDA
@@ -312,7 +313,7 @@ qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoki
 # ERROR rank deficiency, i.e. some variables 
 # are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
 qda.pred <- predict(qda.fit, stroke_data)
-#TODO: Calculate deviance and standardize deviance
+qda.pred.stroke <- qda.pred$posterior[, 2]
 
 table(qda.pred$class, stroke)
 ```
@@ -322,6 +323,30 @@ table(qda.pred$class, stroke)
 ```{r}
 library(pROC)
 library(ROCR)
+get.roc.recall.values <- function(pred_models, true_value) {
+  result <- data.frame(Threshold1=double(), Specificity=double(), Sensitivity=double(),
+                       Threshold2=double(), Recall=double(), Precision=double())
+  n_models = length(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke))
+  par(mfrow=c(n_models, 2))
+  for (pred in pred_models) {
+    roc.res <- roc(true_value, pred, levels=c("0", "1"))
+    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
+    
+    tmp.res  <- coords(roc.res, "best")
+    pred.rec = prediction(mod.red.probs, true_value)
+    perf = performance(pred.rec, "prec", "rec")
+    plot(perf)
+    pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
+                             precision=perf@y.values[[1]])
+    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
+    
+    result[nrow(result) + 1,] = c(tmp.res[1, 1], tmp.res[1, 2], tmp.res[1, 3], 
+                                  best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
+  }
+  par(mfrow=c(1, 1))
+  return(result)
+}
+
 ```
 
 
