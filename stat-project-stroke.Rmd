@@ -47,7 +47,7 @@ stroke_data$Residence_type<-as.factor(Residence_type)
 stroke_data$smoking_status<-as.factor(smoking_status)
 ```
 
-What's more, the variable `bmi` was not numeric because of the presence of a string "N/A" which identifies the lack of the value, and so we transformed it using the command `stroke_data$bmi <- as.numeric(bmi)`; and then removed those NA values:`stroke_data<- na.omit(stroke_data)`.
+What's more, the variable `bmi` was not numeric because of the presence of a string "N/A" which identifies the lack of the value, and so we transformed it using the command `stroke_data$bmi <- as.numeric(bmi)`; and then removed those NA values: `stroke_data<- na.omit(stroke_data)`.
 
 ```{r,echo=FALSE, results='hide', message=FALSE}
 stroke_data$bmi <- as.numeric(bmi)
@@ -76,7 +76,7 @@ par(mfrow=c(1,1))
 ```
 
 Through the analysis on the Stroke dataset, we discovered that it was strongly bias, in the sense that 209 people on a total of 4909 get a stroke:
-```{r, fig.height=3, fig.width=3}
+```{r, fig.height=3, fig.width=3, fig.align='center'}
 barplot(table(stroke)/dim(stroke_data)[1],
         xlab='probability to have a stroke')
 ```
@@ -94,11 +94,11 @@ At this point we can ask some questions:
 We will explore the data trying to answer them.
 
 First of all we look at some intuitive relation between `stroke` and `age`,`bmi` and `avg_glucose_level`:
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.align='center'}
 par(mfrow=c(3,1))
 ```
 
-```{r,fig.height=3, fig.width=4.5}
+```{r,fig.height=3, fig.width=4.5, fig.align='center'}
 plot(stroke~age)
 plot(stroke~bmi)
 plot(stroke~avg_glucose_level)
@@ -109,7 +109,7 @@ par(mfrow=c(1,1))
 Looking to these plots we can see that the incidence of the virus increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
 
 We now highlight other visual relationship thanks to the scatter plots:
-```{r,fig.height=3, fig.width=4}
+```{r,fig.height=3, fig.width=4, fig.align='center'}
 library(ggplot2)
 par(mfrow=c(1,3))
 ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
@@ -128,7 +128,7 @@ While going on with the classification using logistic regression we could meet t
 
 ## 4.1 Full and Reduced Models
 
-```{r}
+```{r, fig.dim=c(3.5,3.5)}
 mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
 ```
@@ -160,9 +160,8 @@ summary(mod.red2)
 #####
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
-summary(mod.red)
 ```
-The `mod.red` has `age`, `hypertension`, `avg_glucose_level` as the variables with the highest level of significance.
+The `mod.red` has `age`, `heart_disease`, `hypertension`, `avg_glucose_level` as the explanatory variables with the highest level of significance.
 
 ```{r}
 mod.red.resid <- residuals(mod.red, type="deviance")
@@ -176,10 +175,8 @@ qqline(mod.red.resid, col='red')
 ```
 
 Residual plot:
-```{r,fig.dim=c(1,1)}
-#par(mfrow=c(2,2))
-#plot(mod.red)
-#par(mfrow=c(1,1))
+```{r,fig.dim=c(3.5,3.5)}
+plot(mod.red)
 ```
 We can see from the residual vs predicted values the presence of high non-linearity in the dataset.
 In the qqplot instead we see that residuals do no follow a normal distribution.
@@ -200,100 +197,87 @@ As expected from the anova test rejects that the complex model is more significa
 
 Outliers:
 ```{r}
-View(stroke_data[c("119","183","246"), ])
+library(knitr)
+kable(stroke_data[c("119","183","246"), ])
 ```
 
 
 ## 4.3 Mixed Approach for Models
 
-In order to see which variables were relevant on our research we tested various models usign the mixed approach: we started by the null model and then added variables and removed those with p-value over a threshold of 0.1 (which indicates low relationship with the `stroke` variable). In addition, we used the F-statistic to determine those variables that were in good relation, so they may contribute positively to the models:
-```{r, echo=FALSE}
-var.test(age,avg_glucose_level) 
-var.test(age, hypertension) 
-var.test(hypertension,avg_glucose_level)
-var.test(age, heart_disease)
-var.test(avg_glucose_level,heart_disease)
-var.test(age,bmi) 
-```
-All the p-values of the tests were above 2.2e-16 and so each of them were good relationships. Only the value of the F-statitic varied.
+In order to see which variables were relevant on our research we tested various models using the mixed approach: we started by the reduced model `mod.red` and then tested some interaction between the explanatory variables for improving the performance of the model.
 
-We start with a simple model with `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
+We started with `mod.red`, which had `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
+We recall that its AIC was 1384.6.
+
+We started by considering the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`,`hypertension` and `heart_disease`: we find out that only `age*heart_disease` was relevant between the ones tested, with an AIC = 1384, which was lower than the one of the reduced model `mod.red`. 
 ```{r}
-mod1 <- glm(stroke~age+avg_glucose_level+hypertension+heart_disease, family=binomial)
+mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
+               age*heart_disease, family=binomial)
 summary(mod1)
 ```
-We then tested some iterations between the explanatory variables is order to see if we can improve our model:
+We went on considering all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` was the best of the possible interaction but cannot improve the previous model, it had an AIC of 1385.9.
 ```{r, results='hide'}
-mod2 <- glm(stroke~age+avg_glucose_level+hypertension+heart_disease + age*avg_glucose_level, family = binomial)
+mod2 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension +
+              avg_glucose_level*hypertension, family=binomial)
 summary(mod2)
 ```
-`avg_glucose_level*age` and `avg_glucose_level` have p-value over the threshold, so we remove them, then add `hypertension`:
+In the end it was left the interaction `heart_disease*hypertension` which return an AIC 1384.5 for the model.
 ```{r, results='hide'}
-mod3 <-glm(stroke ~ age + hypertension, family = binomial)
-summary(mod3) 
+mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension + 
+            heart_disease*hypertension, family=binomial)
+summary(mod3)
 ```
-All the p-values makes the variables relevant so we keep all of them and we add the interaction between `hypertension` and `glucose_level` and `age`:
-```{r, echo=FALSE}
-mod4 <- glm(stroke~age+hypertension+ hypertension*avg_glucose_level+hypertension*age,
-             family = binomial)
+
+We then tried to see the results of the `mod.red` without `heart_disease` which was the explanatory variables with higher p-value, and then we added some interaction terms, starting with the one with `age`:
+```{r, results='hide'}
+mod4 <- glm(stroke~age + avg_glucose_level + hypertension + 
+              age*hypertension, family=binomial)
 summary(mod4)
 ```
-We remove `hypertension*avg_glucose_level` and add `heart_disease`:
-
-```{r, results='hide'}
-mod5 <- glm(stroke~age + hypertension +heart_disease, family = binomial)
+The AIC of this model was 1386.2, higher that the ones seen on the previous tested models.
+We go forther testing also the interaction add `avg_glucose_level*hypertension`
+```{r, echo=FALSE}
+mod5 <- glm(stroke~age + avg_glucose_level + hypertension + 
+              avg_glucose_level*hypertension, family=binomial)
 summary(mod5)
 ```
-We add `heart_disease *avg_glucose_level + heart_disease*hypertension + heart_disease*age` 
-```{r, echo=FALSE}
-mod6 <- glm(stroke~age + hypertension + heart_disease + heart_disease*avg_glucose_level+
-              heart_disease*hypertension+ heart_disease*age, family = binomial)
+It had an AIC = 1387.6.
+In the end we return on our base model, `mod.red` and add the teo best iteractions, i.e. the two terms that reduced the AIC term:
+```{r, results='hide'}
+mod6 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
+              age*heart_disease + heart_disease*hypertension, family=binomial)
 summary(mod6)
 ```
-We can remove `heart_disease` because it has a p-value of 0.1925 but also `heart_disease*hypertension` and `heart_disease*age`. We go on adding `bmi`:
-```{r, echo=FALSE}
-mod7 <- glm(stroke~age + hypertension + heart_disease*avg_glucose_level+ bmi, family = binomial)
-summary(mod7)
-```
-We remove `bmi` because it has a p-value of 0.68868 and  also `heart_disease*avg_glucose_level` and add its relation with `age` and `hypertension` because they are the most relavant variables:
-```{r, echo=FALSE}
-mod8 <- glm(stroke~ age + hypertension + heart_disease*hypertension +
-               heart_disease*age + bmi*age + bmi*hypertension, family = binomial)
-summary(mod8)
-```
- We remove them plus and left the model with:
+It has AIC = 1384.2 but the interactions had a p-value greater than 0.1 and it didn't seem to represent our data properly.
+At the end of all we promote `mod1` as the model which better fits our data.
+
+Let's now see some relevant information, such as outliers on the `mod1`:
 ```{r}
-mod9 <- glm(stroke~ age + avg_glucose_level + hypertension+ heart_disease*age, 
-            family = binomial)
-summary(mod9)
+kable(stroke_data[c("207","150","100"), ])
 ```
 
-We can also try with the categorical variables but actually the results do not change, so we keep this `mod9`.
-
-Let's now see some relevant information, such as outliers, leverage point and collinearity through some plots:
-```{r,fig.height=3, fig.width=4}
-par(mfrow=c(2,2))
-#plot(mod9)
-par(mfrow=c(1,1))
+but also leverage point and collinearity:
+```{r,fig.dim=c(3.5,3.5)}
+plot(mod1)
 ```
 
 ## 4.4 Polynomial models
 
-We try to use a polynomial model using the numerical variables with degree 2.
+We tried to use a polynomial model starting from the reduced model `mod.red` with also `bmi` as predictors. Then we contribute with the square of `bmi`, `avg_glucose_level` and then both for the `mod.poly1`,`mod.poly2` and `mod.poly3` respectively.
 ```{r}
-mod.red.poly1 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+mod.poly1 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
-summary(mod.red.poly1)
+summary(mod.poly1)
 
-mod.red.poly2 <- glm(stroke~age + bmi + avg_glucose_level+ hypertension
+mod.poly2 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                      + I(avg_glucose_level^2), family = binomial)
-summary(mod.red.poly2)
+summary(mod.poly2)
 
-mod.red.poly <- glm(stroke~age + bmi + avg_glucose_level+ hypertension+
+mod.poly3 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
-summary(mod.red.poly)
+summary(mod.poly3)
 ```
-Nothing interesting with polynomial models. No improvement in the results.
+At the end of the tests nothing interesting appeared with polynomial models. There were no improvement in the results.
 
 # 5. LDA
 
