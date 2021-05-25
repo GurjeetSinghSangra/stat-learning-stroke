@@ -215,14 +215,14 @@ var.test(age,bmi)
 ```
 All the p-values of the tests were above 2.2e-16 and so each of them were good relationships. Only the value of the F-statitic varied.
 
-We start with a simple model with the only iteration between `stroke` and `age`.
+We start with a simple model with `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
 ```{r}
-mod1 <- glm(stroke~age, family=binomial)
+mod1 <- glm(stroke~age+avg_glucose_level+hypertension+heart_disease, family=binomial)
 summary(mod1)
 ```
-We then add the `avg_glucose_level` variable and also its interaction with `age`:
+We then tested some iterations between the explanatory variables is order to see if we can improve our model:
 ```{r, results='hide'}
-mod2 <- glm(stroke~age+avg_glucose_level+age*avg_glucose_level, family = binomial)
+mod2 <- glm(stroke~age+avg_glucose_level+hypertension+heart_disease + age*avg_glucose_level, family = binomial)
 summary(mod2)
 ```
 `avg_glucose_level*age` and `avg_glucose_level` have p-value over the threshold, so we remove them, then add `hypertension`:
@@ -347,6 +347,10 @@ get.roc.recall.values <- function(pred_models, true_value) {
   return(result)
 }
 
+
+mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, family = binomial)
+summary(mod.red)
+mod.red.probs <- predict(mod.red,type="response")
 ```
 
 

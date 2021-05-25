@@ -204,11 +204,22 @@ mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+
 summary(mod1)
 
 # let's procede with the iteraction:
-# age and ...
+# 1. age*heart_disease
 mod2 <- glm(stroke~age + avg_glucose_level+ heart_disease+
-              hypertension, family=binomial)
+              hypertension + age*heart_disease, family=binomial)
 summary(mod2)
+# could be a little relevant
 
+# 2. avg_glucose_level*hypertension
+mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+
+hypertension + age*heart_disease+avg_glucose_level*hypertension, 
+family=binomial)
+summary(mod3)
+
+mod4 <- glm(stroke~age + avg_glucose_level+ heart_disease+
+              hypertension +avg_glucose_level*hypertension, 
+            family=binomial)
+summary(mod4)
 
 par(mfrow=c(2,2))
 plot(mod1)
