@@ -463,14 +463,14 @@ BIC(mod9)
 
 
 #AIC e BIC non ho utilizzato le formule del codice del professore 
-#perchè in quel caso (dataset Credit) gli errori seguivano un andamento gaussiano
+#perche' in quel caso (dataset Credit) gli errori seguivano un andamento gaussiano
 
 #quindi non ho potuto usare log(RSS/n) come valore della funzione di log-verosomiglianza
 #ho usato direttamente la funzione di R
 
 #4
 # R^2  and adjusted R^2
-##############################à
+##############################
 
 # Total Sum of Squares
 #TSS1 = sum((stroke-mean(stroke))^2)
@@ -502,3 +502,85 @@ R2.adj.mod9
 #PERCIO' DOBBIAMO LASCIARE PERDERE QUEST'ULTIMO METODO
 
 
+#######################################################
+# Ridge & Lasso
+#########################################################
+
+library(glmnet)
+X <- model.matrix(stroke~.,stroke_data)
+X <- X[,-1]
+y <- stroke_data$stroke
+grid <- 10^seq(10, -2, length=100)
+ridge.mod <- glmnet(X, y, alpha=0, lambda=grid)
+
+predict(ridge.mod, s=50, type="coefficients")
+
+cv.out <- cv.glmnet(X, y, alpha=0, nfolds=10, lambda=grid)
+plot(cv.out)
+#lambda.min is the value of ?? that gives minimum mean 
+# cross-validated error, while lambda.1se is the value of ??
+# that gives the most regularized model such that the cross-validated 
+# error is within one standard error of the minimum.
+
+coef(ridge.mod)
+
+cv.out$lambda[1:10]
+summary(cv.out$lambda)
+
+cv.out$cvm[1:10]
+cv.out$cvsd[1:10]
+
+i.bestlam <- which.min(cv.out$cvm)
+i.bestlam 
+bestlam <- cv.out$lambda[i.bestlam]
+bestlam
+cv.out$cvm[i.bestlam]
+
+#bestlam <- cv.out$lambda.min
+#bestlam
+
+########## Lasso ################
+# Lasso yields to sparse models -that is models that involve 
+# only a subset of of the variables.
+cv.out.l <- cv.glmnet(X, y, alpha=1, nfolds=10, lambda=grid)
+plot(cv.out.l)
+
+lasso.mod <- glmnet(X, y, alpha=1, lambda=grid)
+coef(lasso.mod)
+
+cv.out.l$lambda[1:10]
+summary(cv.out.l$lambda)
+
+cv.out.l$cvm[1:10]
+cv.out.l$cvsd[1:10]
+
+i.bestlam <- which.min(cv.out.l$cvm)
+i.bestlam 
+bestlam <- cv.out.l$lambda[i.bestlam]
+bestlam
+
+##### best subset selection ########
+library(leaps)
+best.mod <- regsubsets(stroke~., stroke_data)
+summary(best.mod)
+
+# best model includes: age, avg_glucose_leve, heart_disease, hypertension 
+# as relevant variables
+
+reg.summary <- summary(best.mod)
+names(reg.summary)
+par(mfrow=c(2,2))
+plot(reg.summary$rss, xlab="number of variables", ylab= "RSS", type='l')
+plot(reg.summary$adjr2, xlab = 'number of variables', ylab = 'Adjusted RSq', type = 'l')
+par(mfrow=c(1,1))
+
+# model with max adjr2 and identify it on the plot:
+which.max(reg.summary$adjr2) 
+points(8, reg.summary$adjr2[8], col='red', pch=20)
+
+plot(best.mod, scale='r2')
+plot(best.mod, scale='adjr2')
+plot(best.mod, scale='Cp')
+plot(best.mod, scale='bic')
+
+coef(best.mod, 8)
