@@ -148,16 +148,18 @@ The residual plots aare not satisfactory. From the right plot we can see that th
 
 ## 4.2 Comparison between Reduced Models
 
+We remove at least all the features that have collinearity between each other (`work_type`, `ever_married`) and the `Residence_type`
 ```{r}
-# Reduced model 1 : We remove at least all the features that have collinearity between 
-# each other (work_type, ever_married) and the residence type
-mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender, family=binomial) 
+mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender + heart_disease, family=binomial) #
 summary(mod.red1)
-# Reduced model 2: remove gender
-mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status, family=binomial)
+
+# Reduced model 2, Remove gender
+mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status  + heart_disease, family=binomial) #
 summary(mod.red2)
-# Final Reduced Model
-mod.red <- glm(stroke~age + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
+
+#####
+mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
+summary(mod.red)
 summary(mod.red)
 ```
 The `mod.red` has `age`, `hypertension`, `avg_glucose_level` as the variables with the highest level of significance.

@@ -142,10 +142,10 @@ par(mfrow=c(1,1))
 ##### 
 # Reduced model 1 : We remove at least all the features that have collinearity between each other (work_type, ever_married)
 # and the residence type
-mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender, family=binomial) #
+mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender + heart_disease, family=binomial) #
 summary(mod.red1)
 # Reduced model 2, Remove gender
-mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status, family=binomial) #
+mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status  + heart_disease, family=binomial) #
 summary(mod.red2)
 # Final Reduced Model (with age, hypertension, avg_glucose_level which are the variables with the highest level of significance)
 #####
@@ -198,10 +198,9 @@ var.test(age,bmi)
 #### c. Mixed Model AND INTERACTIONS
 ####################
 # we put a threshold for rejecting the variables on 0.1
-# starting reduced model
-mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+
-              hypertension, family=binomial)
-summary(mod1)
+
+# mod.red is our starting model
+summary(mod.red)
 
 # let's procede with the iteraction:
 # 1. age*heart_disease
