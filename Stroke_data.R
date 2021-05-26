@@ -312,7 +312,7 @@ get.roc.recall.values <- function(pred_models, true_value) {
     ###
     
     ### PREC-REC
-    pred.rec = prediction(mod.red.probs, true_value)
+    pred.rec = prediction(pred, true_value)
     perf = performance(pred.rec, "prec", "rec")
     plot(perf)
     pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
