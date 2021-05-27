@@ -8,16 +8,16 @@ output:
 ---
 # 1. Introduction
 
-In the following report we present the analysis computed on a particular disease, stroke, and its correlation to other factors such as smoking, glucose level, bmi and so on. 
+In the following report we present an analysis computed on stroke diseases, and we try to explain from statistical analysis some statistics and correlation factors of the given features/predictors by constructing predictive statistical models in order to assess possible linear and non-linear relationships of features (predictors) to predict a stroke disease in a person (predicted variable).
 
-"Stroke" is the medical term for damage to brain tissue or the death of a portion of it, due to insufficient blood supply to an area of the brain.
+"Stroke" is the medical term which causes damage to brain tissue or death of its portions, due to insufficient blood supply in vessels to an area of the brain.
 
-Our aim is to see if and how the variables we are dealing with are related to each other, in order to predict which individual is more probable to get a stroke.
+Our aim is to see if and how the variables we are dealing with are related, in order to predict which individual is more probable to have a stroke.
 
 The symptoms of stroke vary from patient to patient, depending on the severity of the condition, the affected brain area, causes, type of stroke, etc.
 
 Stroke is characterized by sudden onset and for this reason it involves the need for immediate therapeutic intervention and adapted to the needs of the patient.
-In this sense, looking for relation between features may help to prevent it.
+In this sense, looking for relation between features may help to prevent or assess it.
 
 In order to have a guide for the interpretation of the data we underline the following information:
 
@@ -26,13 +26,14 @@ In order to have a guide for the interpretation of the data we underline the fol
 
 # 2. Exploiting the Dataset
 
- The dataset we used was provided by kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset] and it is composed of 5,110 entries with a total of 12 columns: `id`, `gender`, `age`, `hypertension`, `heart_disease`, `ever_married`, `work_type`, `Residence_type`, `avg_glucose_level`, `bmi`, `smoking_status`, `stroke`.
+ The dataset we used is provided by kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset] and it is composed of 5,110 entries with a total of 12 columns: `id`, `gender`, `age`, `hypertension`, `heart_disease`, `ever_married`, `work_type`, `Residence_type`, `avg_glucose_level`, `bmi`, `smoking_status`, `stroke`.
 ```{r}
 stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
 attach(stroke_data)
 ```
 
 The preliminary part of the analysis focuses on the study of the dataset: we looked at the `id` column and verified that all the data collected was referring to different people, so no recidivist status were involved.
+After checking this 
 ```{r}
 stroke_data<-stroke_data[,-1]
 ```
