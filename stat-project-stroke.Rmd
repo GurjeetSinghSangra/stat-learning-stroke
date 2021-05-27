@@ -1,4 +1,9 @@
 ---
+output:
+  pdf_document: default
+  html_document: default
+---
+---
 title: "Statistical Learning Project"
 author: " Filippo Santin, Gurjeet Singh, Francesca Zen"
 date: "18/5/2021"
@@ -8,9 +13,9 @@ output:
 ---
 # 1. Introduction
 
-In the following report we present an analysis computed on stroke diseases, and we try to explain from statistical analysis some statistics and correlation factors of the given features/predictors by constructing predictive statistical models in order to assess possible linear and non-linear relationships of features (predictors) to predict a stroke disease in a person (predicted variable).
+In the following report we present an analysis computed on stroke disease, and we try to explain from statistical analysis some statistics and correlation factors of the given features/predictors by constructing predictive statistical models in order to assess possible linear and non-linear relationships of features (predictors) to predict a stroke disease in a person (predicted variable).
 
-"Stroke" is the medical term which causes damage to brain tissue or death of its portions, due to insufficient blood supply in vessels to an area of the brain.
+"Stroke" is the medical term for damage to brain tissue or the death of a portion of it, due to insufficient blood supply to an area of the brain.
 
 Our aim is to see if and how the variables we are dealing with are related, in order to predict which individual is more probable to have a stroke.
 
@@ -156,11 +161,9 @@ We remove at least all the features that have collinearity between each other (`
 ```{r}
 mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender + heart_disease, family=binomial) #
 summary(mod.red1)
-
 # Reduced model 2, Remove gender
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status  + heart_disease, family=binomial) #
 summary(mod.red2)
-
 #####
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
@@ -170,7 +173,6 @@ The `mod.red` has `age`, `heart_disease`, `hypertension`, `avg_glucose_level` as
 ```{r}
 mod.red.resid <- residuals(mod.red, type="deviance")
 predicted <- predict(mod.red, type = "link")
-
 par(mfrow=c(1,2))
 plot(mod.red.resid~predicted)
 abline(h=0, col='red')
@@ -272,11 +274,9 @@ We tried to use a polynomial model starting from the reduced model `mod.red` wit
 mod.poly1 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
 summary(mod.poly1)
-
 mod.poly2 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                      + I(avg_glucose_level^2), family = binomial)
 summary(mod.poly2)
-
 mod.poly3 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
 summary(mod.poly3)
@@ -304,7 +304,6 @@ qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoki
 # are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
 qda.pred <- predict(qda.fit, stroke_data)
 qda.pred.stroke <- qda.pred$posterior[, 2]
-
 table(qda.pred$class, stroke)
 ```
 
@@ -336,8 +335,6 @@ get.roc.recall.values <- function(pred_models, true_value) {
   par(mfrow=c(1, 1))
   return(result)
 }
-
-
 mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, family = binomial)
 summary(mod.red)
 mod.red.probs <- predict(mod.red,type="response")
