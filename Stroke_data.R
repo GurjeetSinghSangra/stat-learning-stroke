@@ -287,9 +287,11 @@ table(qda.pred$class, stroke)
 
 # get the reduced model 
 
-#mod.red <- glm(stroke~avg_glucose_level+hypertension+age+hypertension*age + heart_disease*avg_glucose_level+heart_disease*hypertension + bmi*age+bmi*avg_glucose_level, family = binomial  )
-#mod.red <- glm(stroke~age+avg_glucose_level +age*avg_glucose_level+hypertension+heart_disease+hypertension*age + heart_disease*avg_glucose_level+heart_disease*hypertension, data=stroke_data, family = binomial)
-mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, family = binomial)
+#mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
+#             age*heart_disease, family=binomial)
+#mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension + 
+#             heart_disease*hypertension, family=binomial)
+mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 mod.red.probs <- predict(mod.red,type="response")
 
