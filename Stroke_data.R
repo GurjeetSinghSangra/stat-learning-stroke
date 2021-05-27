@@ -507,6 +507,8 @@ plot(best.mod, scale='bic')
 coef(best.mod, 8)
 
 
+
+
 ################# TRAINING AND VALIDATION SETS ############
 # sum(stroke_data$stroke==0) --> 4700
 # sum(stroke_data$stroke==1) --> 209
@@ -514,17 +516,113 @@ coef(best.mod, 8)
 # di questo 75% ne prendiamo 120 di stroke
 # 3562 without stroke
 no.strokes.data <- stroke_data[stroke == 0, ]
+no.strokes.data
 rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
+rnd.idx.no.strokes
 
 yes.strokes.data <- stroke_data[stroke == 1, ]
+yes.strokes.data
 rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
+rnd.idx.yes.strokes
 
 training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
 training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
 shuffle <- sample(nrow(training.set)) #shuffle the dataset, since the strokes are added in the last positions
 training.set <- training.set[shuffle, ]
+training.set
+dim(training.set)
 
 val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
 val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
 shuffle <- sample(nrow(val.set)) #shuffle the dataset, since the strokes are added in the last positions
 val.set <- val.set[shuffle, ]
+val.set
+dim(val.set)
+
+attach(training.set)
+View(training.set)
+View(stroke_data)
+
+
+
+#mod.red
+mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=training.set, family = binomial)
+mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
+par(mfrow=c(2,2))
+plot(mod.red.train)
+par(mfrow=c(1,1))
+
+mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + age*heart_disease, family=binomial, data=training.set)
+mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
+par(mfrow=c(2,2))
+plot(mod1.train)
+par(mfrow=c(1,1))
+
+lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+Residence_type + heart_disease, data=training.set)
+lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
+lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
+
+#plot(lda.fit.train)
+
+qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = training.set)
+qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
+qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
+
+#plot(qda.fit.train)
+
+
+####
+
+res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, qda.fit.train.pred), training.set$stroke)
+print(res)
+recall_thresholds = res$Thr.Prec.Rec # precision-recall
+roc_thresholds = res$Thr.ROC
+
+
+#################### RECALL prediction for all models
+
+###ESCONO VALORI UGUALI CON MOD.RED 
+
+mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
+table(mod.red.train.pred.class, training.set$stroke)
+mod.red.train.pred.class = as.numeric(mod.red.train.pred >= roc_thresholds[1])
+table(mod.red.train.pred.class,training.set$stroke)
+
+mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
+table(mod1.train.pred.class, training.set$stroke)
+mod1.train.pred.class = as.numeric(mod1.train.pred >= roc_thresholds[2])
+table(mod1.train.pred.class,training.set$stroke)
+
+lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= recall_thresholds[3])
+table(lda.fit.train.pred.class, training.set$stroke)
+lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= roc_thresholds[3])
+table(lda.fit.train.pred.class,training.set$stroke)
+
+
+#manca qda
+
+####
+
+####VALIDATION NON FUNZIONA: PROBLEMA CON DIMENSIONI, PROBABILMENTE E PREDICTTTTTT
+
+mod.red.val <- predict(mod.red.train, data=val.set, type="response")
+print(mod.red.val)
+print(length(mod.red.val))
+print(length(mod.red.train.pred))
+mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
+table(mod.red.val.class, val.set$stroke)
+
+
+mod1.val <- predict(mod1.train, data=val.set, type="response")
+mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
+table(mod1.val.class, val.set$stroke)
+
+
+lda.fit.val <- predict(lda.fit.train, data=val.set)
+lda.fit.val.class = as.numeric(lda.fit.val >= recall_thresholds[3])
+table(lda.fit.val.class, val.set$stroke)
+
+
+
+
+
