@@ -32,8 +32,8 @@ stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
 attach(stroke_data)
 ```
 
-The preliminary part of the analysis focuses on the study of the dataset: we looked at the `id` column and verified that all the data collected was referring to different people, so no recidivist status were involved.
-After checking this 
+The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected was referring to different people, so no recidivist status were involved.
+After this check we removed the column from the dataset as it does not hold useful information for our study
 ```{r}
 stroke_data<-stroke_data[,-1]
 ```
@@ -48,7 +48,7 @@ stroke_data$Residence_type<-as.factor(Residence_type)
 stroke_data$smoking_status<-as.factor(smoking_status)
 ```
 
-What's more, the variable `bmi` was not numeric because of the presence of a string "N/A" which identifies the lack of the value, and so we transformed it using the command `stroke_data$bmi <- as.numeric(bmi)`; and then removed those NA values: `stroke_data<- na.omit(stroke_data)`.
+In addition, the variable `bmi` was not numeric because of the presence of  "N/A" string values which identify missing information, and so we transformed it into numeric values and then removed the NA values.
 
 ```{r,echo=FALSE, results='hide', message=FALSE}
 stroke_data$bmi <- as.numeric(bmi)
@@ -60,6 +60,7 @@ Here we give a quick overview of the main information about the dataset:
 ```{r}
 summary(stroke_data)
 ```
+But in order to highlight and study better the data we used some plot to study their statistics and data distribution.
 
 ```{r, results='hide', message=FALSE}
 attach(stroke_data)
@@ -72,6 +73,8 @@ boxplot(avg_glucose_level, xlab= 'average glucose level' )
 boxplot(bmi, xlab = 'body mass index')
 boxplot(age, xlab = 'age',pch=20)
 ```
+From the above boxplots we can see, TODO: "Outliers", but they represent reality and possible interesting cases for stroke prediction 
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1))
 ```
