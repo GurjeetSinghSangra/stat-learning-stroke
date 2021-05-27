@@ -110,7 +110,7 @@ plot(stroke~avg_glucose_level)
 ```{r, echo=FALSE}
 par(mfrow=c(1,1))
 ```
-Looking to these plots we can see that the incidence of the virus increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
+Looking to these plots we can see that the incidence of the disease increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
 
 We now highlight other visual relationship thanks to the scatter plots:
 ```{r,fig.height=3, fig.width=4, fig.align='center'}
