@@ -598,24 +598,21 @@ qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= roc_thresholds[4])
 table(qda.fit.train.pred.class,training.set$stroke)
 
 
-####VALIDATION NON FUNZIONA: PROBLEMA CON DIMENSIONI, PROBABILMENTE E PREDICTTTTTT
+####VALIDATION ORA FUNZIONA OTTIMAMENTE PER MOD.RED E MOD1
+####C'è da fare per lda e qda
 
-mod.red.val <- predict(mod.red.train, data=val.set, type="response")
-print(mod.red.val)
-print(length(mod.red.val))
+mod.red.val <- predict(mod.red.train,val.set, type="response")
+length(mod.red.val)
 print(length(mod.red.train.pred))
 mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
+mod.red.val.class
 table(mod.red.val.class, val.set$stroke)
 
-
-mod1.val <- predict(mod1.train, data=val.set, type="response")
+mod1.val <- predict(mod1.train, val.set, type="response")
+print(length(mod1.val))
+print(length(mod1.train.pred))
 mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
 table(mod1.val.class, val.set$stroke)
-
-
-lda.fit.val <- predict(lda.fit.train, data=val.set)
-lda.fit.val.class = as.numeric(lda.fit.val >= recall_thresholds[3])
-table(lda.fit.val.class, val.set$stroke)
 
 
 
