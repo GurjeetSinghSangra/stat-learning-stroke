@@ -67,7 +67,7 @@ par(mfrow=c(1, 1))
 table(stroke)
 table(stroke)/dim(stroke_data)[1]
 barplot(table(stroke)/dim(stroke_data)[1],
-        xlab='probability to have a stroke')
+        xlab='probability to have a stroke',col = c('#F8766D','#00BFC4'))
 
 ############
 ## 2. Descriptive Statistic
@@ -76,9 +76,9 @@ barplot(table(stroke)/dim(stroke_data)[1],
 # box plots
 ###########
 boxplot(avg_glucose_level~stroke, xlab= 'stroke', 
-        ylab = 'average glucose level')
-boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi')
-boxplot(age~stroke, xlab='stroke' ,ylab = 'age')
+        ylab = 'average glucose level', col = c('#F8766D','#00BFC4'))
+boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi',col = c('#F8766D','#00BFC4'))
+boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
 #boxplot(heart_disease~stroke, xlab='stroke' ,ylab = 'heart_disease')
 boxplot(avg_glucose_level~heart_disease)
 

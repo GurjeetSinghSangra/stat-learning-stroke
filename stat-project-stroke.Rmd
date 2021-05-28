@@ -81,7 +81,7 @@ In order to highlight and study better the data, we used some plots to study the
 A relevant and important information is provided by the following barplot, in which we see how unbalance is the dataset we are working on: 209 people on a total of 4909 get a stroke.
 ```{r, fig.height=3, fig.width=3, fig.align='center'}
 barplot(table(stroke)/dim(stroke_data)[1],
-        xlab='probability to have a stroke')
+        xlab='probability to have a stroke',col = c('#F8766D','#00BFC4'))
 ```
 This value is representative of the real situation in which there are not many stroke cases compared with the whole population. In Italy, for example, we have 200,000 cases over 59.226.539 people, i.e. 0.33%.
 
@@ -96,17 +96,6 @@ par(mfrow=c(1,1))
 
 From above we can see that in the first two boxplots (starting from the left) there are lots of outliers, that can also be see from the summary looking at the difference between the third quantile and the maximum value in the `avg_glucose_level` and `bmi` variables.
 Actually, they represent reality and possible interesting cases for stroke prediction.**WHY?**
-
-We go on looking at some intuitive relation of `stroke` with `age`,`bmi` and `avg_glucose_level`:
-```{r, fig.height=3.5, fig.width=6.5}
-par(mfrow=c(1,3))
-boxplot(avg_glucose_level~stroke, xlab= 'stroke', 
-        ylab = 'average glucose level')
-boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi')
-boxplot(age~stroke, xlab='stroke' ,ylab = 'age')
-par(mfrow=c(1,1))
-```
-Looking to these plots we can see that the incidence of the disease increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
 
 In order to compare entities in pairs and judge which of each entity is preferred, or has a greater amount of some quantitative property we provide a pair-wise plot. In addition, to involve also the categorical variables we wrote some useful function:
 ```{r}
@@ -149,6 +138,18 @@ pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 ```
 
 The result shows that the stronger relationships involved quite often the variable `age`. There are also other relevant relation between `wrk_type` and `ever_married`,`bmi` and `working_status`.
+
+We go on looking at some intuitive relation of `stroke` with `age`,`bmi` and `avg_glucose_level`:
+```{r, fig.height=3.5, fig.width=6.5}
+par(mfrow=c(1,3))
+boxplot(avg_glucose_level~stroke, xlab= 'stroke', 
+        ylab = 'average glucose level', col = c('#F8766D','#00BFC4'))
+boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi',col = c('#F8766D','#00BFC4'))
+boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
+#boxplot(heart_disease~stroke, xlab='stroke' ,ylab = 'heart_disease')
+par(mfrow=c(1,1))
+```
+Looking to these plots we can see that the incidence of the disease increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
 
 We now highlight other visual relationship thanks to the scatter plots:
 ```{r,fig.height=3, fig.width=4.3, fig.align='center'}
