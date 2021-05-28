@@ -155,12 +155,12 @@ Looking at these plots we can see that the incidence of the disease increases pr
 We now highlight other visual relationship between the variables used before, thanks to the scatter plots:
 ```{r,fig.height=3, fig.width=4.3, fig.align='center'}
 library(ggplot2)
-ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
-                        col = as.factor(stroke))) + geom_point()
-ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
-                        col = as.factor(stroke))) + geom_point()
-ggplot(stroke_data, aes(x = bmi, y = age,
-                        col = as.factor(stroke))) + geom_point()
+ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,col = as.factor(stroke))) +
+  labs(x = "average glucose level", y = "bmi", color = "Stroke") + geom_point()
+ggplot(stroke_data, aes(x = avg_glucose_level, y = age,col = as.factor(stroke))) + 
+  labs(x = "average glucose level",y = "age", color = "Stroke") + geom_point()
+ggplot(stroke_data, aes(x = bmi, y = age, col = as.factor(stroke))) +
+  labs(x = "bmi", y = "age", color = "Stroke") +geom_point()
 ```
 
 Difficult to read data and give a clear classification/explanation.

@@ -101,12 +101,12 @@ par(mfrow=c(1,1))
 ################
 #plot(avg_glucose_level,bmi, pch=16,col=as.factor(stroke))
 library(ggplot2)
-ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
-                        col = as.factor(stroke))) + geom_point()
-ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
-                        col = as.factor(stroke))) + geom_point()
-ggplot(stroke_data, aes(x = bmi, y = age,
-                        col = as.factor(stroke))) + geom_point()
+ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,col = as.factor(stroke))) +
+  labs(x = "average glucose level", y = "bmi", color = "Legend") + geom_point()
+ggplot(stroke_data, aes(x = avg_glucose_level, y = age,col = as.factor(stroke))) + 
+  labs(x = "average glucose level",y = "age", color = "Legend") + geom_point()
+ggplot(stroke_data, aes(x = bmi, y = age, col = as.factor(stroke))) +
+  labs(x = "bmi", y = "age", color = "Legend") +geom_point()
 par(mfrow=c(1,1))
 
 # 3. PAIR PLOTS WITH histogram and correlation matrix
