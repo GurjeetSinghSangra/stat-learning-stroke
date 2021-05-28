@@ -361,7 +361,7 @@ qda.pred.stroke <- qda.pred$posterior[, 2]
 table(qda.pred$class, stroke)
 ```
 
-# 4 Validation
+# 4 Predictions
 
 In order to split the dataset into validation, training and test sets we recall that the amount of data that we have is of 4909, so we decided to keep approximately the 75% of the data for the training phase: 3682 people of which 3562 are the ones which hadn't the stroke, while 120 had it.
 We didn't use the cross-validation because it was difficult to split tha data and bla bla.
@@ -403,6 +403,40 @@ mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_
 summary(mod.red)
 mod.red.probs <- predict(mod.red,type="response")
 ```
+
+## 4.2 Training Set
+
+Insertion of the no-stroke people into the training set:
+```{r}
+no.strokes.data <- stroke_data[stroke == 0, ]
+rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
+```
+
+Insertion of the stroke people into the training set:
+```{r}
+yes.strokes.data <- stroke_data[stroke == 1, ]
+rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
+```
+
+We mix together the two parts and we use the `shuffle` function because the strokes are added in the last positions
+```{r}
+training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
+training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
+shuffle <- sample(nrow(training.set))
+training.set <- training.set[shuffle, ]
+```
+
+
+## 4.3 Validation Set
+
+We mix shuffle together the remaining samples into forming the validation set.
+```{r}
+val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
+val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
+shuffle <- sample(nrow(val.set)) 
+val.set <- val.set[shuffle, ]
+```
+
 
 # 5 Conclusions
 

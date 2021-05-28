@@ -541,27 +541,31 @@ val.set <- val.set[shuffle, ]
 val.set
 dim(val.set)
 
-attach(training.set)
+#attach(training.set)
 
 #mod.red.train
-mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=training.set, family = binomial)
+mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
+                     data=training.set, family = binomial)
 mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
 par(mfrow=c(2,2))
 plot(mod.red.train)
 par(mfrow=c(1,1))
 
-mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + age*heart_disease, data=training.set, family=binomial)
+mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
+                    age*heart_disease, data=training.set, family=binomial)
 mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
 par(mfrow=c(2,2))
 plot(mod1.train)
 par(mfrow=c(1,1))
 
-lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
+lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
+                       Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
 #plot(lda.fit.train)
 
-qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = training.set)
+qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+
+                       smoking_status, data = training.set)
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
 qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
 #plot(qda.fit.train)
@@ -569,48 +573,48 @@ qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
 
 ###########
 
-res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, qda.fit.train.pred), training.set$stroke)
+res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, 
+                                 qda.fit.train.pred), training.set$stroke)
 print(res)
 recall_thresholds = res$Thr.Prec.Rec 
 roc_thresholds = res$Thr.ROC
 
 
 #################### RECALL prediction for all models
-
-mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
-table(mod.red.train.pred.class, training.set$stroke)
 mod.red.train.pred.class = as.numeric(mod.red.train.pred >= roc_thresholds[1])
-table(mod.red.train.pred.class,training.set$stroke)
+table(mod.red.train.pred.class,training.set$stroke) #bad
+mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
+table(mod.red.train.pred.class, training.set$stroke)#good
 
-mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
-table(mod1.train.pred.class, training.set$stroke)
 mod1.train.pred.class = as.numeric(mod1.train.pred >= roc_thresholds[2])
 table(mod1.train.pred.class,training.set$stroke)
+mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
+table(mod1.train.pred.class, training.set$stroke)
 
-lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= recall_thresholds[3])
-table(lda.fit.train.pred.class, training.set$stroke)
 lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= roc_thresholds[3])
 table(lda.fit.train.pred.class,training.set$stroke)
+lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= recall_thresholds[3])
+table(lda.fit.train.pred.class, training.set$stroke)
 
-qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= recall_thresholds[4])
-table(qda.fit.train.pred.class, training.set$stroke)
 qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= roc_thresholds[4])
 table(qda.fit.train.pred.class,training.set$stroke)
+qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= recall_thresholds[4])
+table(qda.fit.train.pred.class, training.set$stroke)
 
 
 ####VALIDATION ORA FUNZIONA OTTIMAMENTE PER MOD.RED E MOD1
-####C'Ã¨ da fare per lda e qda
+####C'è da fare per lda e qda
 
 mod.red.val <- predict(mod.red.train,val.set, type="response")
-length(mod.red.val)
-print(length(mod.red.train.pred))
+#length(mod.red.val)
+#print(length(mod.red.train.pred))
 mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
 mod.red.val.class
 table(mod.red.val.class, val.set$stroke)
 
 mod1.val <- predict(mod1.train, val.set, type="response")
-print(length(mod1.val))
-print(length(mod1.train.pred))
+#print(length(mod1.val))
+#print(length(mod1.train.pred))
 mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
 table(mod1.val.class, val.set$stroke)
 
