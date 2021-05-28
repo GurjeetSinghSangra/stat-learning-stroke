@@ -137,7 +137,7 @@ And here we show the results from the pairs plot:
 pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 ```
 
-The result shows that the stronger relationships involved quite often the variable `age`. There are also other relevant relation between `wrk_type` and `ever_married`,`bmi` and `working_status`.
+The plot shows that the stronger relationships involve quite often the variable `age`. There are also other relevant relation between `work_type` and `ever_married` plus `bmi` with `working_status`.
 
 We go on looking at some intuitive relation of `stroke` with `age`,`bmi` and `avg_glucose_level`:
 ```{r, fig.height=3.5, fig.width=6.5}
@@ -149,9 +149,10 @@ boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
 #boxplot(heart_disease~stroke, xlab='stroke' ,ylab = 'heart_disease')
 par(mfrow=c(1,1))
 ```
-Looking to these plots we can see that the incidence of the disease increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
 
-We now highlight other visual relationship thanks to the scatter plots:
+Looking at these plots we can see that the incidence of the disease increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
+
+We now highlight other visual relationship between the variables used before, thanks to the scatter plots:
 ```{r,fig.height=3, fig.width=4.3, fig.align='center'}
 library(ggplot2)
 ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
