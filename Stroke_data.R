@@ -525,6 +525,7 @@ yes.strokes.data
 rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
 rnd.idx.yes.strokes
 
+##TRAINING SET
 training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
 training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
 shuffle <- sample(nrow(training.set)) #shuffle the dataset, since the strokes are added in the last positions
@@ -532,6 +533,7 @@ training.set <- training.set[shuffle, ]
 training.set
 dim(training.set)
 
+##VALIDATION SET
 val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
 val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
 shuffle <- sample(nrow(val.set)) #shuffle the dataset, since the strokes are added in the last positions
@@ -540,48 +542,40 @@ val.set
 dim(val.set)
 
 attach(training.set)
-View(training.set)
-View(stroke_data)
 
-
-
-#mod.red
+#mod.red.train
 mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=training.set, family = binomial)
 mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
 par(mfrow=c(2,2))
 plot(mod.red.train)
 par(mfrow=c(1,1))
 
-mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + age*heart_disease, family=binomial, data=training.set)
+mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + age*heart_disease, data=training.set, family=binomial)
 mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
 par(mfrow=c(2,2))
 plot(mod1.train)
 par(mfrow=c(1,1))
 
-lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+Residence_type + heart_disease, data=training.set)
+lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
-
 #plot(lda.fit.train)
 
 qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = training.set)
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
 qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
-
 #plot(qda.fit.train)
 
 
-####
+###########
 
 res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, qda.fit.train.pred), training.set$stroke)
 print(res)
-recall_thresholds = res$Thr.Prec.Rec # precision-recall
+recall_thresholds = res$Thr.Prec.Rec 
 roc_thresholds = res$Thr.ROC
 
 
 #################### RECALL prediction for all models
-
-###ESCONO VALORI UGUALI CON MOD.RED 
 
 mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
 table(mod.red.train.pred.class, training.set$stroke)
@@ -598,10 +592,11 @@ table(lda.fit.train.pred.class, training.set$stroke)
 lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= roc_thresholds[3])
 table(lda.fit.train.pred.class,training.set$stroke)
 
+qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= recall_thresholds[4])
+table(qda.fit.train.pred.class, training.set$stroke)
+qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= roc_thresholds[4])
+table(qda.fit.train.pred.class,training.set$stroke)
 
-#manca qda
-
-####
 
 ####VALIDATION NON FUNZIONA: PROBLEMA CON DIMENSIONI, PROBABILMENTE E PREDICTTTTTT
 
