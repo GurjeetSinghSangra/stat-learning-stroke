@@ -11,9 +11,9 @@ output:
   pdf_document: default
   html_document: default
 ---
-# 1. Introduction
+# 1 Introduction
 
-In the following report we present an analysis computed on stroke disease, and we try to explain from statistical analysis some statistics and correlation factors of the given features/predictors by constructing predictive statistical models in order to assess possible linear and non-linear relationships of features (predictors) to predict a stroke disease in a person (predicted variable).
+In the following report we present an analysis computed on stroke disease, and we try to explain from statistical analysis some correlation factors and statistics of the given features/predictors by constructing predictive models in order to assess possible linear and non-linear relationships of features (predictors) to predict a stroke disease in a person (predicted variable).
 
 "Stroke" is the medical term for damage to brain tissue or the death of a portion of it, due to insufficient blood supply to an area of the brain.
 
@@ -27,18 +27,23 @@ In this sense, looking for relation between features may help to prevent or asse
 In order to have a guide for the interpretation of the data we underline the following information:
 
 * The normal values of glucose level are between 60 and 110 mg/dl and with a value greater than 126 mg/dl a person is considered diabetic;
-* a body mass index (BMI) between 18.5-24.9 indicates a normal/healthy weight, below 18.5 indicates underweight, 25.0-29.9 indicates overweight and above 30.0 indicates obese person 
+* a body mass index (BMI) between 18.5-24.9 indicates a normal/healthy weight, below 18.5 indicates underweight, 25.0-29.9 indicates overweight and above 30.0 indicates obese person.
 
-# 2. Exploiting the Dataset
+# 2 Exploring the Dataset
 
- The dataset we used is provided by kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset] and it is composed of 5,110 entries with a total of 12 columns: `id`, `gender`, `age`, `hypertension`, `heart_disease`, `ever_married`, `work_type`, `Residence_type`, `avg_glucose_level`, `bmi`, `smoking_status`, `stroke`.
+The dataset we used is provided by kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset] and it is composed of 5,110 entries with a total of 12 columns: `id`, `gender`, `age`, `hypertension`, `heart_disease`, `ever_married`, `work_type`, `Residence_type`, `avg_glucose_level`, `bmi`, `smoking_status`, `stroke`.
 ```{r}
+library(knitr)
 stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
-attach(stroke_data)
+kable(stroke_data[1:5,], format = 'simple', align='ccccccccc', 
+      col.names = c('id','gender','age', 'hypert.', 'hd' ,'ev_marr',
+                    'work_type','res_type','glucose', 'bmi','smoking','stroke'))
 ```
 
+## 2.1 Preprocessing
+
 The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected was referring to different people, so no recidivist status were involved.
-After this check we removed the column from the dataset as it does not hold useful information for our study
+After this check we removed the column from the dataset as it does not hold useful information for our study.
 ```{r}
 stroke_data<-stroke_data[,-1]
 ```
@@ -46,17 +51,17 @@ stroke_data<-stroke_data[,-1]
 In order to use the variables through the analysis we then transformed the categorical variables into factors:
 
 ```{r}
-stroke_data$gender<- as.factor(gender)
-stroke_data$ever_married<-as.factor(ever_married)
-stroke_data$work_type<-as.factor(work_type)
-stroke_data$Residence_type<-as.factor(Residence_type)
-stroke_data$smoking_status<-as.factor(smoking_status)
+stroke_data$gender<- as.factor(stroke_data$gender)
+stroke_data$ever_married<-as.factor(stroke_data$ever_married)
+stroke_data$work_type<-as.factor(stroke_data$work_type)
+stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
+stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
 ```
 
-In addition, the variable `bmi` was not numeric because of the presence of  "N/A" string values which identify missing information, and so we transformed it into numeric values and then removed the NA values.
+In addition, the variable `bmi` was not numeric because of the presence of  "N/A" string values which identify missing information, and so we transformed it into numeric values and then removed the NA values generated.
 
-```{r,echo=FALSE, results='hide', message=FALSE}
-stroke_data$bmi <- as.numeric(bmi)
+```{r, results='hide', message=FALSE}
+stroke_data$bmi <- as.numeric(stroke_data$bmi)
 stroke_data<- na.omit(stroke_data)
 ```
 
@@ -65,34 +70,96 @@ Here we give a quick overview of the main information about the dataset:
 ```{r}
 summary(stroke_data)
 ```
-But in order to highlight and study better the data we used some plot to study their statistics and data distribution.
+
+## 2.2 Descriptive Statistic
 
 ```{r, results='hide', message=FALSE}
 attach(stroke_data)
 ```
 
-A visual transformation of these values is provided in the following boxplots:
+In order to highlight and study better the data, we used some plots to study their statistics and distribution.
+A relevant and important information is provided by the following barplot, in which we see how unbalance is the dataset we are working on: 209 people on a total of 4909 get a stroke.
+```{r, fig.height=3, fig.width=3, fig.align='center'}
+barplot(table(stroke)/dim(stroke_data)[1],
+        xlab='probability to have a stroke')
+```
+This value is representative of the real situation in which there are not many stroke cases compared with the whole population. In Italy, for example, we have 200,000 cases over 59.226.539 people, i.e. 0.33%.
+
+A visual transformation of the values seen in the `summary` function is provided in the following boxplots:
 ```{r, fig.height=3, fig.width=6}
 par(mfrow=c(1,3))
 boxplot(avg_glucose_level, xlab= 'average glucose level' )
 boxplot(bmi, xlab = 'body mass index')
 boxplot(age, xlab = 'age',pch=20)
-```
-From the above boxplots we can see, TODO: "Outliers", but they represent reality and possible interesting cases for stroke prediction 
-
-```{r, echo=FALSE}
 par(mfrow=c(1,1))
 ```
 
-Through the analysis on the Stroke dataset, we discovered that it was strongly bias, in the sense that 209 people on a total of 4909 get a stroke:
-```{r, fig.height=3, fig.width=3, fig.align='center'}
-barplot(table(stroke)/dim(stroke_data)[1],
-        xlab='probability to have a stroke')
+From above we can see that in the first two boxplots (starting from the left) there are lots of outliers, that can also be see from the summary looking at the difference between the third quantile and the maximum value in the `avg_glucose_level` and `bmi` variables.
+Actually, they represent reality and possible interesting cases for stroke prediction.**WHY?**
+
+We go on looking at some intuitive relation of `stroke` with `age`,`bmi` and `avg_glucose_level`:
+```{r,fig.dim=c(4.5,3), fig.align='center'}
+plot(stroke~age)
+plot(stroke~bmi)
+plot(stroke~avg_glucose_level)
+```
+Looking to these plots we can see that the incidence of the disease increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
+
+In order to compare entities in pairs and judge which of each entity is preferred, or has a greater amount of some quantitative property we provide a pair-wise plot. In addition, to involve also the categorical variables we wrote some useful function:
+```{r}
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...){
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r <- abs(cor(x, y))
+  txt <- format(c(r, 0.123456789), digits = digits)[1]
+  txt <- paste0(prefix, txt)
+  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+panel.hist <- function(x, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h <- hist(x, plot = FALSE)
+  breaks <- h$breaks; nB <- length(breaks)
+  y <- h$counts; y <- y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col = "green", ...)
+}
+
+box_plot_categories <- function(data, y){
+  n_features = length(data)
+  grid = round(sqrt(n_features))
+  print(grid)
+  par(mfrow=c(grid, grid))
+  names = colnames(data)
+  for (idx in c(1:n_features)) {
+    plot(y ~ data[, idx], xlab=names[idx], main=c('Boxplot y ~ ', names[idx]))
+  }
+  par(mfrow=c(1, 1))
+}
 ```
 
-This value is representative of the real situation in which there are not many stroke cases compared with the whole population. In Italy, for example, we have 200,000 cases over 59.226.539 people, i.e. 0.33%.
+And here we show the results from the pairs plot:
+```{r}
+pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
+```
 
-# 3. Searching for Relationships
+The result shows that the stronger relationships involved quite often the variable `age`. There are also other relevant relation between `wrk_type` and `ever_married`,`bmi` and `working_status`.
+
+We now highlight other visual relationship thanks to the scatter plots:
+```{r,fig.height=3, fig.width=4.3, fig.align='center'}
+library(ggplot2)
+ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
+                        col = as.factor(stroke))) + geom_point()
+ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
+                        col = as.factor(stroke))) + geom_point()
+ggplot(stroke_data, aes(x = bmi, y = age,
+                        col = as.factor(stroke))) + geom_point()
+```
+
+Difficult to read data and give a clear classification/explanation.
+
 At this point we can ask some questions:
 
 * Is it possible to prevent ictus?
@@ -102,74 +169,60 @@ At this point we can ask some questions:
 
 We will explore the data trying to answer them.
 
-First of all we look at some intuitive relation between `stroke` and `age`,`bmi` and `avg_glucose_level`:
-```{r, echo=FALSE, fig.align='center'}
-par(mfrow=c(3,1))
-```
+# 3 Modeling
 
-```{r,fig.height=3, fig.width=4.5, fig.align='center'}
-plot(stroke~age)
-plot(stroke~bmi)
-plot(stroke~avg_glucose_level)
-```
-```{r, echo=FALSE}
-par(mfrow=c(1,1))
-```
-Looking to these plots we can see that the incidence of the disease increases progressively with age and that if we sum also the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. In addition there is no apparent relation of `stroke` with `bmi`.
+We will now present some different approaches for the classification of the data.
 
-We now highlight other visual relationship thanks to the scatter plots:
-```{r,fig.height=3, fig.width=4, fig.align='center'}
-library(ggplot2)
-par(mfrow=c(1,3))
-ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,
-                        col = as.factor(stroke))) + geom_point()
-ggplot(stroke_data, aes(x = avg_glucose_level, y = age,
-                        col = as.factor(stroke))) + geom_point()
-ggplot(stroke_data, aes(x = bmi, y = age,
-                        col = as.factor(stroke))) + geom_point()
-par(mfrow=c(1,1))
-```
-**discussione**
+## 3.1 Logistic Regression
 
-# 4. Analysis on models
+In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data.
 
-While going on with the classification using logistic regression we could meet the following problems: non-linearity of the data, correlation of errorterms, heteroschedasticity, outliers, leverage point and collinearity.
+While going on with the classification using logistic regression we could meet the following problems: non-linearity of the data, correlation of error terms, heteroschedasticity, outliers, leverage point and collinearity.
 
-## 4.1 Full and Reduced Models
+### 3.1.1 Full and Reduced Models
 
+We start with the full model to see if all the features of the dataset contribute positively/negatively on the prediction of a stroke.
 ```{r, fig.dim=c(3.5,3.5)}
 mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
 ```
-Here we see that `age` and `hypertension` are the variables most related to `stroke`.
+Here we see that `age`, `avg_glucose_level` and `hypertension` are the variables most related to `stroke`.
 
-Let's use the residual plots to get more information about this model:
+Let's use the residual plots to get more information about this model (we use `type="deviance"` because we have a binary response):
 ```{r}
-mod.full.resid <- residuals(mod.full, type="deviance") # because we have a binary response
+mod.full.resid <- residuals(mod.full, type="deviance") 
 predicted <- predict(mod.full, type = "link")
 par(mfrow=c(1,2))
 plot(mod.full.resid~predicted)
 abline(h=0, col='red')
 qqnorm(mod.full.resid)
 qqline(mod.full.resid, col='red')
+par(mfrow=c(1,1))
 ```
-The residual plots aare not satisfactory. From the right plot we can see that the data are not normal.
+The residual plots are not satisfactory because it is not easy to interpret them. From the right plot we can see that the data are not normal.
 
-## 4.2 Comparison between Reduced Models
+We now make some test in order to find the best reduced model: we start from the full model and then remove all the features that have collinearity between each other,i.e. `work_type`, `Residence_type` and `ever_married`.
+```{r, results='hide'}
+mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
+                  smoking_status + gender + heart_disease, family=binomial)
+```
 
-We remove at least all the features that have collinearity between each other (`work_type`, `ever_married`) and the `Residence_type`
-```{r}
-mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender + heart_disease, family=binomial) #
-summary(mod.red1)
-# Reduced model 2, Remove gender
-mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status  + heart_disease, family=binomial) #
+Also in this case the variables more important are the same of the ones found in the full moel but also `heart_disease` seems to contribute to the prediction.
+In this step we try to remove the `gender` variable:
+```{r, results='hide'}
+mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
+                  smoking_status  + heart_disease, family=binomial) 
 summary(mod.red2)
-#####
-mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
+```
+
+The variables left to remove are `bmi` and `smoking_status`, and we ended up with the final reduced model:
+
+```{r}
+mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
+               data=stroke_data, family = binomial)
 summary(mod.red)
 ```
-The `mod.red` has `age`, `heart_disease`, `hypertension`, `avg_glucose_level` as the explanatory variables with the highest level of significance.
-
+For this model we also give a descriptive statistic through the residual plots:
 ```{r}
 mod.red.resid <- residuals(mod.red, type="deviance")
 predicted <- predict(mod.red, type = "link")
@@ -178,12 +231,9 @@ plot(mod.red.resid~predicted)
 abline(h=0, col='red')
 qqnorm(mod.red.resid)
 qqline(mod.red.resid, col='red')
+par(mfrow=c(1,1))
 ```
 
-Residual plot:
-```{r,fig.dim=c(3.5,3.5)}
-plot(mod.red)
-```
 We can see from the residual vs predicted values the presence of high non-linearity in the dataset.
 In the qqplot instead we see that residuals do no follow a normal distribution.
 
@@ -193,29 +243,31 @@ In the end by looking at the leverage plot, we see the presence of some sample w
 
 *Buuut I don't know in which range of levarage value is considered to change a lot the prediction of the model.*
 Furthermore R does not show the index of the sample with high leverage, *I guess because a lot of values could change the prediction.*
+
 Some outliers with high variance are: idx: 119, 183, 246.
 
-Anova computation:
+In the end, if we compare the results obtained from the full and reduced models we can say that the reduced seems to make a more accurate prediction and fits better the data, also the AIC is lower than the one of the full model. To have a confirmation of this, we use the anova function, which compare the two models and returns the better between the two.
 ```{r}
 anova(mod.full, mod.red, test="Chisq")
 ```
 As expected from the anova test rejects that the complex model is more significant than the reduced one, since the p-value is not less than 5%. Hence the full model does not help with our prediction.
 
-Outliers:
-```{r}
-library(knitr)
-kable(stroke_data[c("119","183","246"), ])
+Outliers of the reduced model:
+```{r, echo=FALSE}
+kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc', 
+      col.names = c('gender','age', 'hypert.', 'hd' ,'ev_marr',
+                    'work_type','res_type','glucose', 'bmi','smoking','stroke'))
 ```
 
 
-## 4.3 Mixed Approach for Models
+### 3.1.2 Interaction
 
 In order to see which variables were relevant on our research we tested various models using the mixed approach: we started by the reduced model `mod.red` and then tested some interaction between the explanatory variables for improving the performance of the model.
 
 We started with `mod.red`, which had `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
 We recall that its AIC was 1384.6.
 
-We started by considering the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`,`hypertension` and `heart_disease`: we find out that only `age*heart_disease` was relevant between the ones tested, with an AIC = 1384, which was lower than the one of the reduced model `mod.red`. 
+We then consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`,`hypertension` and `heart_disease`: we find out that only `age*heart_disease` was relevant between the ones tested, with an AIC = 1384, which was lower than the one of the reduced model `mod.red`. 
 ```{r}
 mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
                age*heart_disease, family=binomial)
@@ -228,7 +280,7 @@ mod2 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension +
 summary(mod2)
 ```
 In the end it was left the interaction `heart_disease*hypertension` which return an AIC 1384.5 for the model.
-```{r, results='hide'}
+```{r, echo = FALSE}
 mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension + 
             heart_disease*hypertension, family=binomial)
 summary(mod3)
@@ -241,8 +293,8 @@ mod4 <- glm(stroke~age + avg_glucose_level + hypertension +
 summary(mod4)
 ```
 The AIC of this model was 1386.2, higher that the ones seen on the previous tested models.
-We go forther testing also the interaction add `avg_glucose_level*hypertension`
-```{r, echo=FALSE}
+We go further testing also the interaction add `avg_glucose_level*hypertension`
+```{r, results='hide'}
 mod5 <- glm(stroke~age + avg_glucose_level + hypertension + 
               avg_glucose_level*hypertension, family=binomial)
 summary(mod5)
@@ -258,8 +310,10 @@ It has AIC = 1384.2 but the interactions had a p-value greater than 0.1 and it d
 At the end of all we promote `mod1` as the model which better fits our data.
 
 Let's now see some relevant information, such as outliers on the `mod1`:
-```{r}
-kable(stroke_data[c("207","150","100"), ])
+```{r, echo=FALSE}
+kable(stroke_data[c("207","150","100"), ], format = 'simple', align='cccccccc', 
+      col.names = c('gender','age', 'hypert.', 'hd' ,'ev_marr',
+                    'work_type','res_type','glucose', 'bmi','smoking','stroke'))
 ```
 
 but also leverage point and collinearity:
@@ -267,10 +321,10 @@ but also leverage point and collinearity:
 plot(mod1)
 ```
 
-## 4.4 Polynomial models
+### 3.1.3 Polynomial models
 
 We tried to use a polynomial model starting from the reduced model `mod.red` with also `bmi` as predictors. Then we contribute with the square of `bmi`, `avg_glucose_level` and then both for the `mod.poly1`,`mod.poly2` and `mod.poly3` respectively.
-```{r}
+```{r, results='hide'}
 mod.poly1 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
 summary(mod.poly1)
@@ -283,7 +337,7 @@ summary(mod.poly3)
 ```
 At the end of the tests nothing interesting appeared with polynomial models. There were no improvement in the results.
 
-# 5. LDA
+## 3.2 LDA
 
 Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ```{r}
@@ -295,7 +349,7 @@ table(lda.pred$class, stroke)
 lda.pred.stroke <- lda.pred$posterior[, 2]
 ```
 
-# 6. QDA
+## 3.3 QDA
 
 Assumption: sample are normally distributed BUT NOT SAME variance among classes.
 ```{r}
@@ -307,8 +361,16 @@ qda.pred.stroke <- qda.pred$posterior[, 2]
 table(qda.pred$class, stroke)
 ```
 
-# 7. ROC and RECALL-PRECISION CURVES
+# 4 Validation
 
+In order to split the dataset into validation, training and test sets we recall that the amount of data that we have is of 4909, so we decided to keep approximately the 75% of the data for the training phase: 3682 people of which 3562 are the ones which hadn't the stroke, while 120 had it.
+We didn't use the cross-validation because it was difficult to split tha data and bla bla.
+
+**CODICE CORRETTO**
+
+## 4.1 ROC and PRECISION-RECALL Curves
+
+We introduced an hand-written function to make usefull plot:
 ```{r}
 library(pROC)
 library(ROCR)
@@ -319,7 +381,8 @@ get.roc.recall.values <- function(pred_models, true_value) {
   par(mfrow=c(n_models, 2))
   for (pred in pred_models) {
     roc.res <- roc(true_value, pred, levels=c("0", "1"))
-    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
+    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", 
+         ylab="True positive rate")
     
     tmp.res  <- coords(roc.res, "best")
     pred.rec = prediction(mod.red.probs, true_value)
@@ -335,10 +398,12 @@ get.roc.recall.values <- function(pred_models, true_value) {
   par(mfrow=c(1, 1))
   return(result)
 }
-mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, family = binomial)
+mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, 
+               family = binomial)
 summary(mod.red)
 mod.red.probs <- predict(mod.red,type="response")
 ```
 
+# 5 Conclusions
 
 Si stima che la percentuale di persone che possono avere un ictus andrà via via crescendo dal momento che l'età media della popolazione è in costante crescita.
