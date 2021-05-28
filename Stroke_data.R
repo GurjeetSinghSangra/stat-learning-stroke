@@ -75,9 +75,11 @@ barplot(table(stroke)/dim(stroke_data)[1],
 
 # box plots
 ###########
-boxplot(avg_glucose_level, xlab= 'average glucose level')
-boxplot(bmi, xlab = 'body mass index')
-boxplot(age, xlab = 'age')
+boxplot(avg_glucose_level~stroke, xlab= 'stroke', 
+        ylab = 'average glucose level')
+boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi')
+boxplot(age~stroke, xlab='stroke' ,ylab = 'age')
+#boxplot(heart_disease~stroke, xlab='stroke' ,ylab = 'heart_disease')
 boxplot(avg_glucose_level~heart_disease)
 
 # pair plot y~ relevant feature
