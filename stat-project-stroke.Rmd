@@ -31,7 +31,7 @@ In order to have a guide for the interpretation of the data we underline the fol
 
 # 2 Exploring the Dataset
 
-The dataset we used is provided by kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset] and it is composed of 5,110 entries with a total of 12 columns: `id`, `gender`, `age`, `hypertension`, `heart_disease`, `ever_married`, `work_type`, `Residence_type`, `avg_glucose_level`, `bmi`, `smoking_status`, `stroke`.
+The dataset we used is provided by Kaggle ^[https://www.kaggle.com/fedesoriano/stroke-prediction-dataset] and it is composed of 5,110 entries with a total of 12 columns: `id`, `gender`, `age`, `hypertension`, `heart_disease`, `ever_married`, `work_type`, `Residence_type`, `avg_glucose_level`, `bmi`, `smoking_status`, `stroke`.
 ```{r}
 library(knitr)
 stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
@@ -42,13 +42,13 @@ kable(stroke_data[1:5,], format = 'simple', align='ccccccccc',
 
 ## 2.1 Preprocessing
 
-The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected was referring to different people, so no recidivist status were involved.
+The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected was referring to different people, thus no recidivist status were involved.
 After this check we removed the column from the dataset as it does not hold useful information for our study.
 ```{r}
 stroke_data<-stroke_data[,-1]
 ```
 
-In order to use the variables through the analysis we then transformed the categorical variables into factors:
+In order to use the variables through the analysis we transformed the categorical variables into factors:
 
 ```{r}
 stroke_data$gender<- as.factor(stroke_data$gender)
@@ -58,7 +58,7 @@ stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
 stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
 ```
 
-In addition, the variable `bmi` was not numeric because of the presence of  "N/A" string values which identify missing information, and so we transformed it into numeric values and then removed the NA values generated.
+In addition, the variable `bmi` was not numeric because of the presence of  "N/A" string values which identify missing information, hence we transformed it into numeric values and then removed the NA values generated.
 
 ```{r, results='hide', message=FALSE}
 stroke_data$bmi <- as.numeric(stroke_data$bmi)
@@ -78,12 +78,12 @@ attach(stroke_data)
 ```
 
 In order to highlight and study better the data, we used some plots to study their statistics and distribution.
-A relevant and important information is provided by the following barplot, in which we see how unbalance is the dataset we are working on: 209 people on a total of 4909 get a stroke.
+A relevant and important information is provided by the following barplot, in which we see an unbalance dataset issue: 209 people on a total of 4909 get a stroke.
 ```{r, fig.height=3, fig.width=3, fig.align='center'}
 barplot(table(stroke)/dim(stroke_data)[1],
         xlab='probability to have a stroke',col = c('#F8766D','#00BFC4'))
 ```
-This value is representative of the real situation in which there are not many stroke cases compared with the whole population. In Italy, for example, we have 200,000 cases over 59.226.539 people, i.e. 0.33%.
+This value is representative of the real situation in which there are not many stroke cases compared with the whole population. In Italy, for example, we have 200,000 cases over 59.226.539 people, i.e. 0.33%. Furthermore in many clinical diseases analysis this issue is commonly present.
 
 A visual transformation of the values seen in the `summary` function is provided in the following boxplots:
 ```{r, fig.height=3.5, fig.width=6.5}
@@ -95,7 +95,7 @@ par(mfrow=c(1,1))
 ```
 
 From above we can see that in the first two boxplots (starting from the left) there are lots of outliers, that can also be see from the summary looking at the difference between the third quantile and the maximum value in the `avg_glucose_level` and `bmi` variables.
-Actually, they represent reality and possible interesting cases for stroke prediction.**WHY?**
+Actually, they represent real-scenario (few people are affected by high glucose levels) and possible interesting cases of pathologies bounded with diabetes. Hence these data points have to be considered during modeling, they could be helpful to predict stroke cases since as mentioned in the medical literature stroke could be also due to complications of diabetes.
 
 In order to compare entities in pairs and judge which of each entity is preferred, or has a greater amount of some quantitative property we provide a pair-wise plot. In addition, to involve also the categorical variables we wrote some useful function:
 ```{r}
@@ -163,7 +163,9 @@ ggplot(stroke_data, aes(x = bmi, y = age, col = as.factor(stroke))) +
   labs(x = "bmi", y = "age", color = "Stroke") +geom_point()
 ```
 
-Difficult to read data and give a clear classification/explanation.
+Difficult to read data and give a clear classification/explanation. 
+
+WE HAVE TO Write that even with high average levels and bmi it's not so straightforward to detect the stroke, since they could be related to other disease (which are not correlated with stroke????) or there are still not enough complications to develop a stroke. Insomma l'associazione non e` cosi diretta e il problema sembra essere complicato perche non descrive una chiara classificazione guardando i punti.
 
 At this point we can ask some questions:
 
