@@ -535,6 +535,10 @@ qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
 qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
 #plot(qda.fit.train)
+
+# The interaction qda, which has the same variable of the logistic interaction model,
+# improved a lot the result in the training set, but in the validation test 
+# it does perform the same as the previous qda
 qda.inter.fit.train <- qda(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
                              age*heart_disease, data = training.set)
 qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
@@ -594,10 +598,11 @@ qda.val <- qda.val$posterior[, 2]
 qda.val.class = as.numeric(qda.val >= recall_thresholds[4])
 table(qda.val.class, val.set$stroke)
 
+# The interaction qda, which has the same variable of the logistic interaction model,
+# improved a lot the result in the training set, but in the validation test 
+# it does perform the same as the previous qda
 qda.inter.val <- predict(qda.inter.fit.train, val.set)
 qda.inter.val <- qda.inter.val$posterior[, 2]
 qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
 table(qda.val.class, val.set$stroke)
-
-
 
