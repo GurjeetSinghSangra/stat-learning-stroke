@@ -1,30 +1,13 @@
-# dataset
-stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
-View(stroke_data)
-names(stroke_data)
-summary(stroke_data)
-sum(is.na(stroke_data))
+## Libraries
+library(ggplot2)
+library(MASS)
+library(pROC)
+library(ROCR) 
+library(leaps)
+library(glmnet)
 
-####################
-# 1. Preprocessing
-#####################
-stroke_data<-stroke_data[,-1]
-stroke_data$gender<- as.factor(stroke_data$gender)
-stroke_data$ever_married<-as.factor(stroke_data$ever_married)
-stroke_data$work_type<-as.factor(stroke_data$work_type)
-stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
-stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
 
-# modifiche a bmi
-stroke_data$bmi <- as.numeric(stroke_data$bmi)# A warning has to be shown for N/A values which has to be map in NAs values. In case this warning is not shown, update R version to 4.__
-stroke_data<- na.omit(stroke_data)
-
-summary(stroke_data)
-
-###
-### Functions
-#########################
-
+## Functions
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...){
   usr <- par("usr"); on.exit(par(usr))
   par(usr = c(0, 1, 0, 1))
@@ -57,6 +40,59 @@ box_plot_categories <- function(data, y){
   par(mfrow=c(1, 1))
 }
 
+get.roc.recall.values <- function(pred_models, true_value) {
+  result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
+                       Thr.Prec.Rec=double(), Recall=double(), Precision=double())
+  n_models = length(pred_models)
+  par(mfrow=c(n_models, 2))
+  for (pred in pred_models) {
+    ### ROC
+    roc.res <- roc(true_value, pred, levels=c("0", "1"))
+    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
+    
+    best.roc  <- coords(roc.res, "best")
+    ###
+    
+    ### PREC-REC
+    pred.rec = prediction(pred, true_value)
+    perf = performance(pred.rec, "prec", "rec")
+    plot(perf)
+    pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
+                             precision=perf@y.values[[1]])
+    pr_cutoffs <- pr_cutoffs[pr_cutoffs$recall>0 &  pr_cutoffs$precision >0, ]
+    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
+    
+    result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
+                                  best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
+  }
+  par(mfrow=c(1, 1))
+  return(result)
+}
+
+################################################
+# Dataset
+stroke_data <- read.csv('healthcare-dataset-stroke-data.csv')
+View(stroke_data)
+names(stroke_data)
+summary(stroke_data)
+sum(is.na(stroke_data))
+
+####################
+# 1. Preprocessing
+#####################
+stroke_data<-stroke_data[,-1]
+stroke_data$gender<- as.factor(stroke_data$gender)
+stroke_data$ever_married<-as.factor(stroke_data$ever_married)
+stroke_data$work_type<-as.factor(stroke_data$work_type)
+stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
+stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
+
+# modifiche a bmi
+stroke_data$bmi <- as.numeric(stroke_data$bmi)# A warning has to be shown for N/A values which has to be map in NAs values. In case this warning is not shown, update R version to 4.__
+stroke_data<- na.omit(stroke_data)
+
+summary(stroke_data)
+
 ##################################
 attach(stroke_data)
 ##################################
@@ -79,13 +115,11 @@ boxplot(avg_glucose_level~stroke, xlab= 'stroke',
         ylab = 'average glucose level', col = c('#F8766D','#00BFC4'))
 boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi',col = c('#F8766D','#00BFC4'))
 boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
-#boxplot(heart_disease~stroke, xlab='stroke' ,ylab = 'heart_disease')
-boxplot(avg_glucose_level~heart_disease)
 
 # pair plot y~ relevant feature
 #################
 par(mfrow=c(1,1))
-#age
+# age
 plot(stroke~age)
 stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke']
 table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])#/length(stroke.less.35)
@@ -99,8 +133,6 @@ par(mfrow=c(1,1))
 
 # Scatter plot
 ################
-#plot(avg_glucose_level,bmi, pch=16,col=as.factor(stroke))
-library(ggplot2)
 ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,col = as.factor(stroke))) +
   labs(x = "average glucose level", y = "bmi", color = "Legend") + geom_point()
 ggplot(stroke_data, aes(x = avg_glucose_level, y = age,col = as.factor(stroke))) + 
@@ -177,7 +209,7 @@ par(mfrow=c(1,1))
 # Furthermore R does not show the index of the sample with high leverage, i guess because a lot of values could change the prediction.
 # Some outliers with high variance are: idx: 183, 246, 163
 
-View(stroke_data[c("246","183","119"), ]) 
+print(stroke_data[c("246","183","119"), ]) 
 ###################
 
 #anova computation.
@@ -239,7 +271,7 @@ par(mfrow=c(2,2))
 plot(mod1)
 par(mfrow=c(1,1))
 
-View(stroke_data[c("207","150","100"), ])
+print(stroke_data[c("207","150","100"), ])
 
 ## d. polynomial model
 ##############
@@ -261,7 +293,7 @@ summary(mod.poly3)
 #                   LDA
 # Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ############################################
-library(MASS)
+
 lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender
                +smoking_status+ever_married+Residence_type + heart_disease)
 lda.pred <- predict(lda.fit)
@@ -296,39 +328,9 @@ table(qda.pred$class, stroke)
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 mod.red.probs <- predict(mod.red,type="response")
-# ROC curve
-library(pROC)
-library(ROCR) # Precision plot
+
 
 ################ RECALL-PRECISION function #################
-get.roc.recall.values <- function(pred_models, true_value) {
-  result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
-                       Thr.Prec.Rec=double(), Recall=double(), Precision=double())
-  n_models = length(pred_models)
-  par(mfrow=c(n_models, 2))
-  for (pred in pred_models) {
-    ### ROC
-    roc.res <- roc(true_value, pred, levels=c("0", "1"))
-    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
-    
-    best.roc  <- coords(roc.res, "best")
-    ###
-    
-    ### PREC-REC
-    pred.rec = prediction(pred, true_value)
-    perf = performance(pred.rec, "prec", "rec")
-    plot(perf)
-    pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
-                             precision=perf@y.values[[1]])
-    pr_cutoffs <- pr_cutoffs[pr_cutoffs$recall>0 &  pr_cutoffs$precision >0, ]
-    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
-    
-    result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
-                                  best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
-  }
-  par(mfrow=c(1, 1))
-  return(result)
-}
 
 res = get.roc.recall.values(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke), stroke)
 print(res)
@@ -402,7 +404,7 @@ BIC(mod3)
 # Ridge & Lasso
 #########################################################
 
-library(glmnet)
+
 X <- model.matrix(stroke~.,stroke_data)
 X <- X[,-1]
 y <- stroke_data$stroke
@@ -456,7 +458,7 @@ bestlam <- cv.out.l$lambda[i.bestlam]
 bestlam
 
 ##### best subset selection ########
-library(leaps)
+
 best.mod <- regsubsets(stroke~., stroke_data)
 summary(best.mod)
 
@@ -525,7 +527,7 @@ plot(mod1.train)
 par(mfrow=c(1,1))
 
 lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
-                       Residence_type + heart_disease + gender, data=training.set)  #se metto gender mi dice "varabile costante"
+                       Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
 plot(lda.fit.train)
@@ -534,7 +536,6 @@ qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease
                        smoking_status, data = training.set)
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
 qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
-#plot(qda.fit.train)
 
 # The interaction qda, which has the same variable of the logistic interaction model,
 # improved a lot the result in the training set, but in the validation test 
@@ -578,7 +579,7 @@ qda.inter.fit.train.pred.class = as.numeric(qda.inter.fit.train.pred  >= recall_
 table(qda.inter.fit.train.pred.class, training.set$stroke)
 
 ####VALIDATION ORA FUNZIONA OTTIMAMENTE PER MOD.RED E MOD1
-####C'? da fare per lda e qda
+####C'e da fare per lda e qda
 
 mod.red.val <- predict(mod.red.train, val.set, type="response")
 mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
@@ -604,5 +605,5 @@ table(qda.val.class, val.set$stroke)
 qda.inter.val <- predict(qda.inter.fit.train, val.set)
 qda.inter.val <- qda.inter.val$posterior[, 2]
 qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
-table(qda.val.class, val.set$stroke)
+table(qda.inter.val.class, val.set$stroke)
 
