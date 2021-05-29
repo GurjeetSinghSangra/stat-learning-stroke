@@ -300,11 +300,11 @@ mod.red.probs <- predict(mod.red,type="response")
 library(pROC)
 library(ROCR) # Precision plot
 
-################ SUPER MEGA FUNZIONE CHE CALCOLA TUTTO #################
+################ RECALL-PRECISION function #################
 get.roc.recall.values <- function(pred_models, true_value) {
   result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
                        Thr.Prec.Rec=double(), Recall=double(), Precision=double())
-  n_models = length(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke))
+  n_models = length(pred_models)
   par(mfrow=c(n_models, 2))
   for (pred in pred_models) {
     ### ROC
@@ -351,39 +351,12 @@ table(qda.stroke.class, stroke)
 qda.stroke.class = as.numeric(qda.pred.stroke >= roc_thresholds[3])
 table(qda.stroke.class, stroke)
 
-############################## MAYBE TO REMOVE EVERYTHING BELOW ########################
-par(mfrow=c(1,1))
-# levels=controls (0's) as first element and cases (1's) as second
-roc.out <- roc(stroke, mod.red.probs, levels=c("0", "1"))
-# plot
-plot(roc.out, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
-# suggested threshold
-coords(roc.out, "best")
-
-pred.recall = prediction(mod.red.probs, stroke)
-perf = performance(pred.recall, "prec", "rec")
-plot(perf)
-par(mfrow=c(1,1))
-pr_cutoffs <- data.frame(cut=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
-                      precision=perf@y.values[[1]])
-pr_cutoffs[pr_cutoffs$recall>0.6, ]
-best_recall = pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ] #da controllare insieme
-
-#RESOCONTO
-#ho provato sia il modello ridotto sia alcuni dei modelli con interazione (vi ho lasciato i tre i migliori, 
-# due sono commentati per fare le prove)
-# AUC ~= 0.85, quindi direi che secondo la teoria il test e' moderatamente/abbastanza accurato 
-# (potere discriminante del test) si ottiene di conseguenza un thresold molto piccolo circa 0.037
-
-# nel caso dell'ictus ? meglio avere FP rather than FN -> FNR basso
 # Allora ieri guardando i plot della ROC curve io e francesca c'eravamo posti due domande sui risultati.
 # Siccome siamo in un problema medico di predizione di ictus di un paziente oppure no, alla fine la ROC curve non e` molto d'aiuto perche massimizza i true positive con i true predicted. 
 # Questo significa che possibilmenete gli errori di false negativo possono incrementare.
 # In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
 # Noi vorremmo invece che il false negative sia basso e quindi considerato. 
 # Insomma significa che dobbiamo usare la Precision Recall curve.
-
-
 
 ###MODEL SELECTION 
 
@@ -508,9 +481,6 @@ plot(best.mod, scale='bic')
 
 coef(best.mod, 8)
 
-
-
-
 ################# TRAINING AND VALIDATION SETS ############
 # sum(stroke_data$stroke==0) --> 4700
 # sum(stroke_data$stroke==1) --> 209
@@ -518,14 +488,10 @@ coef(best.mod, 8)
 # di questo 75% ne prendiamo 120 di stroke
 # 3562 without stroke
 no.strokes.data <- stroke_data[stroke == 0, ]
-no.strokes.data
 rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
-rnd.idx.no.strokes
 
 yes.strokes.data <- stroke_data[stroke == 1, ]
-yes.strokes.data
 rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
-rnd.idx.yes.strokes
 
 ##TRAINING SET
 training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
@@ -540,10 +506,8 @@ val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
 val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
 shuffle <- sample(nrow(val.set)) #shuffle the dataset, since the strokes are added in the last positions
 val.set <- val.set[shuffle, ]
-val.set
-dim(val.set)
 
-#attach(training.set)
+attach(training.set)
 
 #mod.red.train
 mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
@@ -561,22 +525,25 @@ plot(mod1.train)
 par(mfrow=c(1,1))
 
 lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
-                       Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
+                       Residence_type + heart_disease + gender, data=training.set)  #se metto gender mi dice "varabile costante"
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
-#plot(lda.fit.train)
+plot(lda.fit.train)
 
 qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+
                        smoking_status, data = training.set)
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
 qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
 #plot(qda.fit.train)
-
+qda.inter.fit.train <- qda(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
+                             age*heart_disease, data = training.set)
+qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
+qda.inter.fit.train.pred<- qda.inter.fit.train.pred$posterior[, 2]
 
 ###########
 
 res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, 
-                                 qda.fit.train.pred), training.set$stroke)
+                                 qda.fit.train.pred, qda.inter.fit.train.pred), training.set$stroke)
 print(res)
 recall_thresholds = res$Thr.Prec.Rec 
 roc_thresholds = res$Thr.ROC
@@ -603,24 +570,34 @@ table(qda.fit.train.pred.class,training.set$stroke)
 qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= recall_thresholds[4])
 table(qda.fit.train.pred.class, training.set$stroke)
 
+qda.inter.fit.train.pred.class = as.numeric(qda.inter.fit.train.pred  >= recall_thresholds[5])
+table(qda.inter.fit.train.pred.class, training.set$stroke)
 
 ####VALIDATION ORA FUNZIONA OTTIMAMENTE PER MOD.RED E MOD1
-####C'è da fare per lda e qda
+####C'? da fare per lda e qda
 
-mod.red.val <- predict(mod.red.train,val.set, type="response")
-#length(mod.red.val)
-#print(length(mod.red.train.pred))
+mod.red.val <- predict(mod.red.train, val.set, type="response")
 mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
-mod.red.val.class
 table(mod.red.val.class, val.set$stroke)
 
 mod1.val <- predict(mod1.train, val.set, type="response")
-#print(length(mod1.val))
-#print(length(mod1.train.pred))
 mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
 table(mod1.val.class, val.set$stroke)
 
+lda.val <- predict(lda.fit.train, val.set)
+lda.val <- lda.val$posterior[, 2]
+lda.val.class = as.numeric(lda.val >= recall_thresholds[3])
+table(lda.val.class, val.set$stroke)
 
+qda.val <- predict(qda.fit.train, val.set)
+qda.val <- qda.val$posterior[, 2]
+qda.val.class = as.numeric(qda.val >= recall_thresholds[4])
+table(qda.val.class, val.set$stroke)
+
+qda.inter.val <- predict(qda.inter.fit.train, val.set)
+qda.inter.val <- qda.inter.val$posterior[, 2]
+qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
+table(qda.val.class, val.set$stroke)
 
 
 
