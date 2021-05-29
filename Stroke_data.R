@@ -222,15 +222,6 @@ anova(mod.full, mod.red, test="Chisq")
 # Hence the full model does not help with our prediction.
 ######################
 
-# F-statistic to see variance
-###################
-
-var.test(age,avg_glucose_level) # low p-value -> relation
-var.test(age, hypertension) # low p-value -> relation
-var.test(hypertension,avg_glucose_level) # low p-value -> relation
-var.test(age, heart_disease) # low p-value -> relation
-var.test(avg_glucose_level,heart_disease) # low p-value, very high F -> relation?
-var.test(age,bmi)
 
 #### c. Mixed Model AND Interaction
 ####################
@@ -341,19 +332,19 @@ recall_thresholds = res$Thr.Prec.Rec # precision-recall
 roc_thresholds = res$Thr.ROC
 
 #################### RECALL prediction for all models
-mod.red.probs.class = as.numeric(mod.red.probs >= recall_thresholds[1])
-table(mod.red.probs.class, stroke)
 mod.red.probs.class = as.numeric(mod.red.probs >= roc_thresholds[1])
 table(mod.red.probs.class, stroke)
+mod.red.probs.class = as.numeric(mod.red.probs >= recall_thresholds[1])
+table(mod.red.probs.class, stroke)
 
-lda.stroke.class = as.numeric(lda.pred.stroke >= recall_thresholds[2])
-table(lda.stroke.class, stroke)
 lda.stroke.class = as.numeric(lda.pred.stroke >= roc_thresholds[2])
 table(lda.stroke.class, stroke)
+lda.stroke.class = as.numeric(lda.pred.stroke >= recall_thresholds[2])
+table(lda.stroke.class, stroke)
 
-qda.stroke.class = as.numeric(qda.pred.stroke >= recall_thresholds[3])
-table(qda.stroke.class, stroke)
 qda.stroke.class = as.numeric(qda.pred.stroke >= roc_thresholds[3])
+table(qda.stroke.class, stroke)
+qda.stroke.class = as.numeric(qda.pred.stroke >= recall_thresholds[3])
 table(qda.stroke.class, stroke)
 
 # Allora ieri guardando i plot della ROC curve io e francesca c'eravamo posti due domande sui risultati.
