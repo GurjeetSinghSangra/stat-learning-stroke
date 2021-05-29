@@ -40,7 +40,7 @@ box_plot_categories <- function(data, y){
   par(mfrow=c(1, 1))
 }
 
-get.roc.recall.values <- function(pred_models, true_value) {
+get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
   result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
                        Thr.Prec.Rec=double(), Recall=double(), Precision=double())
   n_models = length(pred_models)
@@ -48,15 +48,18 @@ get.roc.recall.values <- function(pred_models, true_value) {
   for (pred in pred_models) {
     ### ROC
     roc.res <- roc(true_value, pred, levels=c("0", "1"))
-    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
-    
+    if (yes_plot==TRUE){
+      plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
+    }
     best.roc  <- coords(roc.res, "best")
     ###
     
     ### PREC-REC
     pred.rec = prediction(pred, true_value)
     perf = performance(pred.rec, "prec", "rec")
-    plot(perf)
+    if (yes_plot==TRUE){
+      plot(perf)
+    }
     pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
                              precision=perf@y.values[[1]])
     pr_cutoffs <- pr_cutoffs[pr_cutoffs$recall>0 &  pr_cutoffs$precision >0, ]
@@ -548,7 +551,8 @@ qda.inter.fit.train.pred<- qda.inter.fit.train.pred$posterior[, 2]
 ###########
 
 res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, 
-                                 qda.fit.train.pred, qda.inter.fit.train.pred), training.set$stroke)
+                                 qda.fit.train.pred, qda.inter.fit.train.pred), training.set$stroke,
+                            yes_plot=FALSE)
 print(res)
 recall_thresholds = res$Thr.Prec.Rec 
 roc_thresholds = res$Thr.ROC
