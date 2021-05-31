@@ -280,7 +280,7 @@ In order to see which variables were relevant on our research we tested various 
 
 We started with `mod.red`, which had `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
 We recall that its AIC was 1384.6.
-
+**commento sul threshold --> teniamo il 90%**
 We then consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`,`hypertension` and `heart_disease`: we find out that only `age*heart_disease` was relevant between the ones tested, with an AIC = 1384, which was lower than the one of the reduced model `mod.red`. 
 ```{r}
 mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
