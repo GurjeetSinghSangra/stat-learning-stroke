@@ -78,12 +78,13 @@ attach(stroke_data)
 ```
 
 In order to highlight and study better the data, we used some plots to study their statistics and distribution.
-A relevant and important information is provided by the following barplot, in which we see an unbalance dataset issue: 209 people on a total of 4909 get a stroke.
+A relevant and important information is provided by the following barplot, in which we see an unbalance dataset issue: 209 people on a total of 4909 get a stroke, i.e. the 4.25 % of the people.
 ```{r, fig.height=3, fig.width=3, fig.align='center'}
+table(stroke)/dim(stroke_data)[1]
 barplot(table(stroke)/dim(stroke_data)[1],
         xlab='probability to have a stroke',col = c('#F8766D','#00BFC4'))
 ```
-This value is representative of the real situation in which there are not many stroke cases compared with the whole population. In Italy, for example, we have 200,000 cases over 59.226.539 people, i.e. 0.33%. Furthermore in many clinical diseases analysis this issue is commonly present.
+This value is representative of the real situation in which there are not many stroke cases compared with the whole population. The incidence of stroke in Europe at the beginning of the 21st century varies from 95 to 290 cases/100,000^[QUADERNI dell'Italian Journal of Medicine, A Journal of Hospital and Internal Medicine, Michele Meschi,volume 8, issue 2, March-April 2020]. Furthermore in many clinical diseases analysis this issue is commonly present.
 
 A visual transformation of the values seen in the `summary` function is provided in the following boxplots:
 ```{r, fig.height=3.5, fig.width=6.5}
@@ -138,6 +139,7 @@ pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 ```
 
 The plot shows that the stronger relationships involve quite often the variable `age`. There are also other relevant relation between `work_type` and `ever_married` plus `bmi` with `working_status`.
+In addition, we can see strong collinearity among th dummy variables `age`, `work_type`, and `ever_married`, so they do not contribute in the fitting.
 
 We go on looking at some intuitive relation of `stroke` with `age`,`bmi` and `avg_glucose_level`:
 ```{r, fig.height=3.5, fig.width=6.5}
@@ -165,7 +167,9 @@ ggplot(stroke_data, aes(x = bmi, y = age, col = as.factor(stroke))) +
 
 Difficult to read data and give a clear classification/explanation. 
 
-WE HAVE TO Write that even with high average levels and bmi it's not so straightforward to detect the stroke, since they could be related to other disease (which are not correlated with stroke????) or there are still not enough complications to develop a stroke. Insomma l'associazione non e` cosi diretta e il problema sembra essere complicato perche non descrive una chiara classificazione guardando i punti.
+Even with high `avg_glucose_level` and `bmi` it's not so straightforward to detect the stroke, since they could not be so strictly related to disease but maybe correlated to other illnesses linked (or not) to it. In the end it seem to be not so simple to identify the direct relationship with the stroke while dealing with the features that we have.
+
+*be related to other disease (which are not correlated with stroke????) or there are still not enough complications to develop a stroke. Insomma l'associazione non e` cosi diretta e il problema sembra essere complicato perche non descrive una chiara classificazione guardando i punti.*
 
 At this point we can ask some questions:
 
@@ -377,7 +381,13 @@ We didn't use the cross-validation because it was difficult to split tha data an
 
 ## 4.1 ROC and PRECISION-RECALL Curves
 
-We introduced an hand-written function to make usefull plot:
+We introduced an hand-written function to make usefull plot because 
+Allora ieri guardando i plot della ROC curve io e francesca c'eravamo posti due domande sui risultati.
+Siccome siamo in un problema medico di predizione di ictus di un paziente oppure no, alla fine la ROC curve non e` molto d'aiuto perche massimizza i true positive con i true predicted. 
+Questo significa che possibilmenete gli errori di false negativo possono incrementare.
+In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
+Noi vorremmo invece che il false negative sia basso e quindi considerato. 
+Insomma significa che dobbiamo usare la Precision Recall curve.
 ```{r}
 library(pROC)
 library(ROCR)

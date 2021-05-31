@@ -101,8 +101,6 @@ attach(stroke_data)
 ##################################
 
 #### Dataset biased 
-par(mfrow=c(1, 1))
-
 table(stroke)
 table(stroke)/dim(stroke_data)[1]
 barplot(table(stroke)/dim(stroke_data)[1],
@@ -121,7 +119,6 @@ boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
 
 # pair plot y~ relevant feature
 #################
-par(mfrow=c(1,1))
 # age
 plot(stroke~age)
 stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke']
@@ -129,33 +126,26 @@ table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])#/length(strok
 table(stroke.less.35 <- stroke_data[stroke_data$age>=35 & stroke_data$age<50 , 'stroke'])
 table(stroke.less.35 <- stroke_data[stroke_data$age>=50 , 'stroke'])
 
-par(mfrow=c(2,1))
-plot(stroke~bmi)
-plot(stroke~avg_glucose_level)
-par(mfrow=c(1,1))
-
 # Scatter plot
 ################
 ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,col = as.factor(stroke))) +
-  labs(x = "average glucose level", y = "bmi", color = "Legend") + geom_point()
+  labs(x = "average glucose level", y = "bmi", color = "Stroke") + geom_point()
 ggplot(stroke_data, aes(x = avg_glucose_level, y = age,col = as.factor(stroke))) + 
-  labs(x = "average glucose level",y = "age", color = "Legend") + geom_point()
+  labs(x = "average glucose level",y = "age", color = "Stroke") + geom_point()
 ggplot(stroke_data, aes(x = bmi, y = age, col = as.factor(stroke))) +
-  labs(x = "bmi", y = "age", color = "Legend") +geom_point()
-par(mfrow=c(1,1))
+  labs(x = "bmi", y = "age", color = "Stroke") +geom_point()
 
 # 3. PAIR PLOTS WITH histogram and correlation matrix
 #################################################
 
 #pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
 pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
-# Result pairswise plot with matrix correlation: Strong collinearity among:
-# age, worktype, and ever_married => When fitting they do not help and also are redundant dummy variable.
+
 
 # 4. Residual plots and diagnostic for logistic GLMs
 #################################################
 
-# a.Full Model
+# 4.1 Full and Reduced Model
 #####
 mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
@@ -168,24 +158,20 @@ abline(h=0, col='red')
 qqnorm(mod.full.resid)
 qqline(mod.full.resid, col='red')
 
-######################
-
 par(mfrow=c(2,2))
 plot(mod.full)
 par(mfrow=c(1,1))
 
-####################
-# Basic feature selection using T statistics
 ##### 
 # Reduced model 1 : We remove at least all the features that have collinearity between each other (work_type, ever_married)
 # and the residence type
-mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender + heart_disease, family=binomial) #
+mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status + gender + heart_disease, family=binomial)
 summary(mod.red1)
 # Reduced model 2, Remove gender
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + smoking_status  + heart_disease, family=binomial) #
 summary(mod.red2)
-# Final Reduced Model (with age, hypertension, avg_glucose_level, heart_disease )
-#####
+# Final Reduced Model
+
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 
@@ -223,7 +209,7 @@ anova(mod.full, mod.red, test="Chisq")
 ######################
 
 
-#### c. Mixed Model AND Interaction
+#### 4.2 Interaction
 ####################
 # le scelte fatte sono state guidate da p-value con almeno il punto
 # mod.red is our starting model
@@ -267,7 +253,7 @@ par(mfrow=c(1,1))
 
 print(stroke_data[c("207","150","100"), ])
 
-## d. polynomial model
+## 4.3 polynomial model
 ##############
 mod.poly1 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
@@ -280,7 +266,6 @@ summary(mod.poly2)
 mod.poly3 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
 summary(mod.poly3)
-# Any polynomial term does not improve the result
 
 # 5. LDA
 ###########################################
@@ -313,25 +298,18 @@ table(qda.pred$class, stroke)
 #             ROC and RECALL-PRECISION CURVES
 ############################################
 
-# get the reduced model 
-
-#mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
-#             age*heart_disease, family=binomial)
-#mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension + 
-#             heart_disease*hypertension, family=binomial)
+# remember the reduced model 
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
 mod.red.probs <- predict(mod.red,type="response")
 
-
-################ RECALL-PRECISION function #################
-
+# prec- rec curve
 res = get.roc.recall.values(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke), stroke)
 print(res)
 recall_thresholds = res$Thr.Prec.Rec # precision-recall
 roc_thresholds = res$Thr.ROC
 
-#################### RECALL prediction for all models
+###### RECALL prediction for all models
 mod.red.probs.class = as.numeric(mod.red.probs >= roc_thresholds[1])
 table(mod.red.probs.class, stroke)
 mod.red.probs.class = as.numeric(mod.red.probs >= recall_thresholds[1])
@@ -347,23 +325,12 @@ table(qda.stroke.class, stroke)
 qda.stroke.class = as.numeric(qda.pred.stroke >= recall_thresholds[3])
 table(qda.stroke.class, stroke)
 
-# Allora ieri guardando i plot della ROC curve io e francesca c'eravamo posti due domande sui risultati.
-# Siccome siamo in un problema medico di predizione di ictus di un paziente oppure no, alla fine la ROC curve non e` molto d'aiuto perche massimizza i true positive con i true predicted. 
-# Questo significa che possibilmenete gli errori di false negativo possono incrementare.
-# In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
-# Noi vorremmo invece che il false negative sia basso e quindi considerato. 
-# Insomma significa che dobbiamo usare la Precision Recall curve.
-
 ###MODEL SELECTION 
-
-##################################################
-# Reduced model vx the best mixed model
-###################################################
 
 #1
 # AIC
 ############################
-# AIC ? pi? adeguato ad una realt? sconosciuta e a dimensionalit? elevata
+# AIC ? piu adeguato ad una realta sconosciuta e a dimensionalita elevata
 AIC(mod.red)
 AIC(mod1)
 
