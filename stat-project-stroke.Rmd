@@ -248,6 +248,8 @@ par(mfrow=c(1,1))
 We can see from the residual vs predicted values the presence of high non-linearity in the dataset.
 In the qqplot instead we see that residuals do no follow a normal distribution.
 
+Positive coefficient estimates ---> positive association. So, the larger the value, the higher is the estimated probability of stroke.
+
 Instead in the standard deviance vs predicted we can see that homoscedasticity does not hold since the line of the standard residual is not flat, hence even by standardizing the residual we end up having high variance among residuals.
 
 In the end by looking at the leverage plot, we see the presence of some sample with high leverage values (bottom right), which could influence the prediction of the model. 
