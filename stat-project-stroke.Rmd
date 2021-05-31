@@ -227,6 +227,7 @@ summary(mod.red2)
 ```
 
 The variables left to remove are `bmi` and `smoking_status`, and we ended up with the final reduced model:
+$$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|$$
 
 ```{r}
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
