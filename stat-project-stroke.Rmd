@@ -45,24 +45,24 @@ kable(stroke_data[1:5,], format = 'simple', align='ccccccccc',
 The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected was referring to different people, thus no recidivist status were involved.
 After this check we removed the column from the dataset since it does not hold useful information for our study.
 ```{r}
-stroke_data<-stroke_data[,-1]
+stroke_data <- stroke_data[,-1]
 ```
 
 In order to use the variables through the analysis we transformed the categorical variables into factors:
 
 ```{r}
-stroke_data$gender<- as.factor(stroke_data$gender)
-stroke_data$ever_married<-as.factor(stroke_data$ever_married)
-stroke_data$work_type<-as.factor(stroke_data$work_type)
-stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
-stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
+stroke_data$gender <- as.factor(stroke_data$gender)
+stroke_data$ever_married <- as.factor(stroke_data$ever_married)
+stroke_data$work_type <- as.factor(stroke_data$work_type)
+stroke_data$Residence_type <- as.factor(stroke_data$Residence_type)
+stroke_data$smoking_status <- as.factor(stroke_data$smoking_status)
 ```
 
 In addition, the variable `bmi` was not numeric because of the presence of  "N/A" string values which identify missing information, hence we transformed it into numeric values and then removed the NA values generated.
 
 ```{r, results='hide', message=FALSE}
 stroke_data$bmi <- as.numeric(stroke_data$bmi)
-stroke_data<- na.omit(stroke_data)
+stroke_data <- na.omit(stroke_data)
 ```
 
 We ended up having  4,909 entries and 11 total columns.
@@ -90,9 +90,9 @@ This value is representative of the real situation in which there are not many s
 A visual transformation of the values seen in the `summary` function is provided in the following boxplots:
 ```{r, fig.height=3.5, fig.width=6.5}
 par(mfrow=c(1,3))
-boxplot(avg_glucose_level, xlab= 'average glucose level' )
-boxplot(bmi, xlab = 'body mass index')
-boxplot(age, xlab = 'age',pch=20)
+boxplot(avg_glucose_level, xlab= 'average glucose level' , col='#00BA38')
+boxplot(bmi, xlab = 'body mass index', col='#00BA38')
+boxplot(age, xlab = 'age', pch=20, col='#00BA38')
 par(mfrow=c(1,1))
 ```
 
@@ -147,8 +147,8 @@ We go on looking at some intuitive relation of `stroke` with `age`,`bmi` and `av
 par(mfrow=c(1,3))
 boxplot(avg_glucose_level~stroke, xlab= 'stroke', 
         ylab = 'average glucose level', col = c('#F8766D','#00BFC4'))
-boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi',col = c('#F8766D','#00BFC4'))
-boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
+boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi', col = c('#F8766D','#00BFC4'))
+boxplot(age~stroke, xlab='stroke' ,ylab = 'age', col = c('#F8766D','#00BFC4'))
 par(mfrow=c(1,1))
 ```
 
@@ -171,7 +171,7 @@ Even with high `avg_glucose_level` and `bmi` it's not so straightforward to dete
 
 *be related to other disease (which are not correlated with stroke????) or there are still not enough complications to develop a stroke. Insomma l'associazione non e` cosi diretta e il problema sembra essere complicato perche non descrive una chiara classificazione guardando i punti.*
 
-### 2.2.1 Questions
+## 2.3 Data Science Questions
 
 At this point we can ask some questions:
 
@@ -281,42 +281,43 @@ In order to see which variables were relevant on our research we tested various 
 We started with `mod.red`, which had `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
 We recall that its AIC was 1384.6.
 **commento sul threshold --> teniamo il 90%**
-We then consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`,`hypertension` and `heart_disease`: we find out that only `age*heart_disease` was relevant between the ones tested, with an AIC = 1384, which was lower than the one of the reduced model `mod.red`. 
+We then consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`,`hypertension` and `heart_disease`: we find out that only `age*heart_disease` was relevant between the ones tested, with an AIC = 1384, which was lower than the one of the reduced model `mod.red`:
+$$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|$$
 ```{r}
-mod1 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
+mod1 <- glm(stroke~age + avg_glucose_level + heart_disease+ hypertension +
                age*heart_disease, family=binomial)
 summary(mod1)
 ```
 We went on considering all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` was the best of the possible interaction but cannot improve the previous model, it had an AIC of 1385.9.
 ```{r, results='hide'}
-mod2 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension +
+mod2 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension +
               avg_glucose_level*hypertension, family=binomial)
 summary(mod2)
 ```
 In the end it was left the interaction `heart_disease*hypertension` which return an AIC 1384.5 for the model.
 ```{r, echo = FALSE}
-mod3 <- glm(stroke~age + avg_glucose_level+ heart_disease+hypertension + 
+mod3 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension + 
             heart_disease*hypertension, family=binomial)
 summary(mod3)
 ```
 
 We then tried to see the results of the `mod.red` without `heart_disease` which was the explanatory variables with higher p-value, and then we added some interaction terms, starting with the one with `age`:
 ```{r, results='hide'}
-mod4 <- glm(stroke~age + avg_glucose_level + hypertension + 
+mod4 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
               age*hypertension, family=binomial)
 summary(mod4)
 ```
 The AIC of this model was 1386.2, higher that the ones seen on the previous tested models.
 We go further testing also the interaction add `avg_glucose_level*hypertension`
 ```{r, results='hide'}
-mod5 <- glm(stroke~age + avg_glucose_level + hypertension + 
+mod5 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
               avg_glucose_level*hypertension, family=binomial)
 summary(mod5)
 ```
 It had an AIC = 1387.6.
 In the end we return on our base model, `mod.red` and add the teo best iteractions, i.e. the two terms that reduced the AIC term:
 ```{r, results='hide'}
-mod6 <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
+mod6 <- glm(stroke ~ age + avg_glucose_level + heart_disease+ hypertension +
               age*heart_disease + heart_disease*hypertension, family=binomial)
 summary(mod6)
 ```
@@ -339,13 +340,13 @@ plot(mod1)
 
 We tried to use a polynomial model starting from the reduced model `mod.red` with also `bmi` as predictors. Then we contribute with the square of `bmi`, `avg_glucose_level` and then both for the `mod.poly1`,`mod.poly2` and `mod.poly3` respectively.
 ```{r, results='hide'}
-mod.poly1 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
+mod.poly1 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
 
-mod.poly2 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
+mod.poly2 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
                      + I(avg_glucose_level^2), family = binomial)
 
-mod.poly3 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
+mod.poly3 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
 ```
 At the end of the tests nothing interesting appeared with polynomial models. There were no improvement in the results.
@@ -355,8 +356,8 @@ At the end of the tests nothing interesting appeared with polynomial models. The
 Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ```{r}
 library(MASS)
-lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender
-               +smoking_status+ever_married+Residence_type + heart_disease)
+lda.fit <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension + work_type + gender
+               + smoking_status + ever_married + Residence_type + heart_disease)
 lda.pred <- predict(lda.fit)
 table(lda.pred$class, stroke)
 lda.pred.stroke <- lda.pred$posterior[, 2]
@@ -366,8 +367,8 @@ lda.pred.stroke <- lda.pred$posterior[, 2]
 
 Assumption: sample are normally distributed BUT NOT SAME variance among classes.
 ```{r}
-qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, 
-               data = stroke_data)
+qda.fit <- qda(stroke ~ age + bmi + avg_glucose_level + hypertension + heart_disease 
+               + smoking_status, data = stroke_data)
 qda.pred <- predict(qda.fit, stroke_data)
 qda.pred.stroke <- qda.pred$posterior[, 2]
 table(qda.pred$class, stroke)
@@ -456,32 +457,33 @@ attach(training.set)
 Reduced Model:
 ```{r}
 # mod.red.train
-mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
+mod.red.train <- glm(stroke ~ age + heart_disease + avg_glucose_level + hypertension, 
                      data=training.set, family = binomial)
 mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
 
 # mod1.train
-mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
+mod1.train <- glm(stroke ~ age + avg_glucose_level+ heart_disease + hypertension + 
                     age*heart_disease, data=training.set, family=binomial)
 mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
 
 # lda.fit.train
-lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
-                       Residence_type + heart_disease, data=training.set)
+lda.fit.train <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension + 
+                       smoking_status + Residence_type + heart_disease, 
+                     data=training.set)
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
 
 # qda.fit.train
-qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease +
-                       smoking_status, data = training.set)
+qda.fit.train <- qda(stroke ~ age + bmi + avg_glucose_level + hypertension +
+                       heart_disease + smoking_status, data = training.set)
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
-qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
+qda.fit.train.pred <- qda.fit.train.pred$posterior[, 2]
 
 # qda.inter.fit.train
-qda.inter.fit.train <- qda(stroke~age + avg_glucose_level+ heart_disease+ 
+qda.inter.fit.train <- qda(stroke ~ age + avg_glucose_level+ heart_disease + 
                              hypertension + age*heart_disease, data = training.set)
 qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
-qda.inter.fit.train.pred<- qda.inter.fit.train.pred$posterior[, 2]
+qda.inter.fit.train.pred <- qda.inter.fit.train.pred$posterior[, 2]
 ```
 
 The interaction qda, which has the same variable of the logistic interaction model,improved a lot the result in the training set, but in the validation test 
@@ -500,21 +502,21 @@ roc_thresholds = res$Thr.ROC
 
 Nice:
 ```{r}
-mod.red.train.pred.class = as.numeric(mod.red.train.pred >= roc_thresholds[1])
+mod.red.train.pred.class <- as.numeric(mod.red.train.pred >= roc_thresholds[1])
 table(mod.red.train.pred.class,training.set$stroke)
-mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
+mod.red.train.pred.class <- as.numeric(mod.red.train.pred >= recall_thresholds[1])
 table(mod.red.train.pred.class, training.set$stroke, dnn=c('ground thruth','pred'))
 
-mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
+mod1.train.pred.class <- as.numeric(mod1.train.pred >= recall_thresholds[2])
 table(mod1.train.pred.class, training.set$stroke)
 
-lda.fit.train.pred.class = as.numeric(lda.fit.train.pred>=recall_thresholds[3])
+lda.fit.train.pred.class <- as.numeric(lda.fit.train.pred>=recall_thresholds[3])
 table(lda.fit.train.pred.class, training.set$stroke)
 
-qda.fit.train.pred.class = as.numeric(qda.fit.train.pred>= recall_thresholds[4])
+qda.fit.train.pred.class <- as.numeric(qda.fit.train.pred>= recall_thresholds[4])
 table(qda.fit.train.pred.class, training.set$stroke)
 
-qda.inter.fit.train.pred.class  = as.numeric(qda.inter.fit.train.pred >= recall_thresholds[5])
+qda.inter.fit.train.pred.class  <- as.numeric(qda.inter.fit.train.pred >= recall_thresholds[5])
 table(qda.inter.fit.train.pred.class, training.set$stroke)
 ```
 
@@ -531,11 +533,11 @@ val.set <- val.set[shuffle, ]
 Models on validation
 ```{r}
 mod.red.val <- predict(mod.red.train, val.set, type="response")
-mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
+mod.red.val.class <- as.numeric(mod.red.val >= recall_thresholds[1])
 table(mod.red.val.class, val.set$stroke)
 
 mod1.val <- predict(mod1.train, val.set, type="response")
-mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
+mod1.val.class <- as.numeric(mod1.val >= recall_thresholds[2])
 table(mod1.val.class, val.set$stroke)
 
 lda.val <- predict(lda.fit.train, val.set)
@@ -545,12 +547,12 @@ table(lda.val.class, val.set$stroke)
 
 qda.val <- predict(qda.fit.train, val.set)
 qda.val <- qda.val$posterior[, 2]
-qda.val.class = as.numeric(qda.val >= recall_thresholds[4])
+qda.val.class <- as.numeric(qda.val >= recall_thresholds[4])
 table(qda.val.class, val.set$stroke)
 
 qda.inter.val <- predict(qda.inter.fit.train, val.set)
 qda.inter.val <- qda.inter.val$posterior[, 2]
-qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
+qda.inter.val.class <- as.numeric(qda.inter.val >= recall_thresholds[5])
 table(qda.inter.val.class, val.set$stroke)
 
 ```
