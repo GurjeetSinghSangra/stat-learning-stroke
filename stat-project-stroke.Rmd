@@ -13,7 +13,7 @@ output:
 ---
 # 1 Introduction
 
-In the following report we present an analysis computed on stroke disease, and we try to explain from statistical analysis some correlation factors and statistics of the given features/predictors by constructing predictive models in order to assess possible linear and non-linear relationships of features (predictors) to predict a stroke disease in a person (predicted variable).
+In the following report, we present an analysis computed on stroke disease, and we try to explain from statistical analysis some correlation factors and statistics of the given features/predictors by designing predictive models to predict the presence of stroke disease. In addition, we highlight possible linear and non-linear relationships among the given features (predictors) and the stroke disease variable (predicted variable).
 
 "Stroke" is the medical term for damage to brain tissue or the death of a portion of it, due to insufficient blood supply to an area of the brain.
 
