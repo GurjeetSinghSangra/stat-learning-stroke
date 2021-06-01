@@ -351,19 +351,21 @@ mod.poly3 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+
 ```
 At the end of the tests nothing interesting appeared with polynomial models. There were no improvement in the results.
 
-## 3.2 LDA
-
+## 3.2 Bayesian models
+In this section we now study other type of predictive models, which are based on Bayesian concepts. These methods exploits conditional probability and Bayes theorems to make prediction, they are also widely used in classification problems because of their nice structure and properties . Furthermore we would like to compare their results with the logistic model in order to assess their performances.
+## 3.2.1 LDA
+We first consider the Linear Discriminant Analysis (LDA) for the Multivariate case, since we are dealing with multiple explanatory variables
 Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ```{r}
 library(MASS)
-lda.fit <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension + work_type + gender
-               + smoking_status + ever_married + Residence_type + heart_disease)
+lda.fit <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension +  gender
+               + smoking_status +  Residence_type + heart_disease)
 lda.pred <- predict(lda.fit)
 table(lda.pred$class, stroke)
 lda.pred.stroke <- lda.pred$posterior[, 2]
 ```
 
-## 3.3 QDA
+## 3.2.2 QDA
 
 Assumption: sample are normally distributed BUT NOT SAME variance among classes.
 ```{r}

@@ -254,8 +254,8 @@ summary(mod.poly3)
 # Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ############################################
 
-lda.fit <- lda(stroke~age+bmi+avg_glucose_level+hypertension+work_type+gender
-               +smoking_status+ever_married+Residence_type + heart_disease)
+lda.fit <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension +  gender
+               + smoking_status +  Residence_type + heart_disease)
 lda.pred <- predict(lda.fit)
 table(lda.pred$class, stroke)
 lda.pred.stroke <- lda.pred$posterior[, 2]
@@ -340,9 +340,8 @@ mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension +
                     age*heart_disease, data=training.set, family=binomial)
 mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
 
-
 lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
-                       Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
+                       Residence_type + heart_disease, data=training.set) 
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
 #plot(lda.fit.train)
