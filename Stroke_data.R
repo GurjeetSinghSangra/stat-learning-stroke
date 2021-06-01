@@ -117,14 +117,14 @@ boxplot(avg_glucose_level~stroke, xlab= 'stroke',
 boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi',col = c('#F8766D','#00BFC4'))
 boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
 
-# pair plot y~ relevant feature
+# pair plot y~ relevant feature (da inserire)
 #################
 # age
 plot(stroke~age)
 stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke']
 table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])#/length(stroke.less.35)
-table(stroke.less.35 <- stroke_data[stroke_data$age>=35 & stroke_data$age<50 , 'stroke'])
-table(stroke.less.35 <- stroke_data[stroke_data$age>=50 , 'stroke'])
+table(stroke.less.50 <- stroke_data[stroke_data$age>=35 & stroke_data$age<50 , 'stroke'])
+table(stroke.major.50 <- stroke_data[stroke_data$age>=50 , 'stroke'])
 
 # Scatter plot
 ################
@@ -137,8 +137,6 @@ ggplot(stroke_data, aes(x = bmi, y = age, col = as.factor(stroke))) +
 
 # 3. PAIR PLOTS WITH histogram and correlation matrix
 #################################################
-
-#pairs(stroke_data[, c(2, 3, 4, 8, 9, 10, 11)], diag.panel=panel.hist, upper.panel=panel.cor)
 pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 
 
@@ -149,14 +147,6 @@ pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 #####
 mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
-mod.full.resid <- residuals(mod.full, type="deviance") # because we have a binary response
-predicted <- predict(mod.full, type = "link")
-
-par(mfrow=c(1,2))
-plot(mod.full.resid~predicted)
-abline(h=0, col='red')
-qqnorm(mod.full.resid)
-qqline(mod.full.resid, col='red')
 
 par(mfrow=c(2,2))
 plot(mod.full)
@@ -174,15 +164,6 @@ summary(mod.red2)
 
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
 summary(mod.red)
-
-mod.red.resid <- residuals(mod.red, type="deviance")
-predicted <- predict(mod.red, type = "link")
-
-par(mfrow=c(1,2))
-plot(mod.red.resid~predicted)
-abline(h=0, col='red')
-qqnorm(mod.red.resid)
-qqline(mod.red.resid, col='red')
 
 par(mfrow=c(2,2))
 plot(mod.red)
@@ -298,53 +279,14 @@ table(qda.pred$class, stroke)
 #             ROC and RECALL-PRECISION CURVES
 ############################################
 
-# remember the reduced model 
-mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, data=stroke_data, family = binomial)
-summary(mod.red)
-mod.red.probs <- predict(mod.red,type="response")
 
-# prec- rec curve
-res = get.roc.recall.values(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke), stroke)
-print(res)
-recall_thresholds = res$Thr.Prec.Rec # precision-recall
-roc_thresholds = res$Thr.ROC
-
-###### RECALL prediction for all models
-mod.red.probs.class = as.numeric(mod.red.probs >= roc_thresholds[1])
-table(mod.red.probs.class, stroke)
-mod.red.probs.class = as.numeric(mod.red.probs >= recall_thresholds[1])
-table(mod.red.probs.class, stroke)
-
-lda.stroke.class = as.numeric(lda.pred.stroke >= roc_thresholds[2])
-table(lda.stroke.class, stroke)
-lda.stroke.class = as.numeric(lda.pred.stroke >= recall_thresholds[2])
-table(lda.stroke.class, stroke)
-
-qda.stroke.class = as.numeric(qda.pred.stroke >= roc_thresholds[3])
-table(qda.stroke.class, stroke)
-qda.stroke.class = as.numeric(qda.pred.stroke >= recall_thresholds[3])
-table(qda.stroke.class, stroke)
-
-###MODEL SELECTION 
-
-#1
 # AIC
 ############################
 # AIC ? piu adeguato ad una realta sconosciuta e a dimensionalita elevata
 AIC(mod.red)
 AIC(mod1)
 
-#2
-# BIC
-############################
-# BIC viene utilizzato per modelli semplici e "veri"
-BIC(mod.red)
-BIC(mod1)
-BIC(mod3)
-
 #con AIC ----> vince mod2 a conferma che AIC e mallow sono scelgono lo stesso modello
-#con BIC ----> vince mod.red
-
 
 #AIC e BIC non ho utilizzato le formule del codice del professore 
 #perche' in quel caso (dataset Credit) gli errori seguivano un andamento gaussiano
@@ -359,6 +301,131 @@ BIC(mod3)
 #INFATTI NEI MODELLI REGRESSIONE LOGISTICA/NON LINEARE NON E' POSSIBILE CALCOLARE L'R^2.
 #SI UTILIZZA UN COSIDETTO "PSEUDO R QUADRO", TIPO R^2 DI COX O DI SNELL, CHE CON REOVERATO NON ABBIAMO FATTO
 #PERCIO' DOBBIAMO LASCIARE PERDERE QUEST'ULTIMO METODO
+
+
+################# TRAINING AND VALIDATION SETS ############
+# sum(stroke_data$stroke==0) --> 4700
+# sum(stroke_data$stroke==1) --> 209
+# 75% train: 3682 - 25% test
+# di questo 75% ne prendiamo 120 di stroke
+# 3562 without stroke
+no.strokes.data <- stroke_data[stroke == 0, ]
+rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
+
+yes.strokes.data <- stroke_data[stroke == 1, ]
+rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
+
+##TRAINING SET
+training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
+training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
+shuffle <- sample(nrow(training.set)) #shuffle the dataset, since the strokes are added in the last positions
+training.set <- training.set[shuffle, ]
+training.set
+dim(training.set)
+
+##VALIDATION SET
+val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
+val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
+shuffle <- sample(nrow(val.set)) #shuffle the dataset, since the strokes are added in the last positions
+val.set <- val.set[shuffle, ]
+
+attach(training.set)
+
+#mod.red.train
+mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
+                     data=training.set, family = binomial)
+mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
+
+mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
+                    age*heart_disease, data=training.set, family=binomial)
+mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
+
+
+lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
+                       Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
+lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
+lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
+#plot(lda.fit.train)
+
+qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+
+                       smoking_status, data = training.set)
+qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
+qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
+
+# The interaction qda, which has the same variable of the logistic interaction model,
+# improved a lot the result in the training set, but in the validation test 
+# it does perform the same as the previous qda
+qda.inter.fit.train <- qda(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
+                             age*heart_disease, data = training.set)
+qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
+qda.inter.fit.train.pred<- qda.inter.fit.train.pred$posterior[, 2]
+
+###########
+
+res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, 
+                                 qda.fit.train.pred, qda.inter.fit.train.pred), training.set$stroke,
+                            yes_plot=FALSE)
+print(res)
+recall_thresholds = res$Thr.Prec.Rec 
+roc_thresholds = res$Thr.ROC
+
+
+#################### RECALL prediction for all models
+mod.red.train.pred.class = as.numeric(mod.red.train.pred >= roc_thresholds[1])
+table(mod.red.train.pred.class,training.set$stroke)
+mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
+table(mod.red.train.pred.class, training.set$stroke)
+
+#mod1.train.pred.class = as.numeric(mod1.train.pred >= roc_thresholds[2])
+#table(mod1.train.pred.class,training.set$stroke)
+mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
+table(mod1.train.pred.class, training.set$stroke)
+
+#lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= roc_thresholds[3])
+#table(lda.fit.train.pred.class,training.set$stroke)
+lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= recall_thresholds[3])
+table(mod.red.train.pred.class, training.set$stroke, dnn=c('ground thruth','pred'))
+
+#qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= roc_thresholds[4])
+#table(qda.fit.train.pred.class,training.set$stroke)
+qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= recall_thresholds[4])
+table(qda.fit.train.pred.class, training.set$stroke)
+
+qda.inter.fit.train.pred.class = as.numeric(qda.inter.fit.train.pred  >= recall_thresholds[5])
+table(qda.inter.fit.train.pred.class, training.set$stroke)
+
+####VALIDATION ORA FUNZIONA OTTIMAMENTE PER MOD.RED E MOD1
+####C'e da fare per lda e qda
+
+mod.red.val <- predict(mod.red.train, val.set, type="response")
+mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
+table(mod.red.val.class, val.set$stroke)
+
+mod1.val <- predict(mod1.train, val.set, type="response")
+mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
+table(mod1.val.class, val.set$stroke)
+
+lda.val <- predict(lda.fit.train, val.set)
+lda.val <- lda.val$posterior[, 2]
+lda.val.class = as.numeric(lda.val >= recall_thresholds[3])
+table(lda.val.class, val.set$stroke)
+
+qda.val <- predict(qda.fit.train, val.set)
+qda.val <- qda.val$posterior[, 2]
+qda.val.class = as.numeric(qda.val >= recall_thresholds[4])
+table(qda.val.class, val.set$stroke)
+
+# The interaction qda, which has the same variable of the logistic interaction model,
+# improved a lot the result in the training set, but in the validation test 
+# it does perform the same as the previous qda
+qda.inter.val <- predict(qda.inter.fit.train, val.set)
+qda.inter.val <- qda.inter.val$posterior[, 2]
+qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
+table(qda.inter.val.class, val.set$stroke)
+
+
+###########################################################################
+###########################################################################
 
 
 #######################################################
@@ -417,155 +484,3 @@ i.bestlam <- which.min(cv.out.l$cvm)
 i.bestlam 
 bestlam <- cv.out.l$lambda[i.bestlam]
 bestlam
-
-##### best subset selection ########
-
-best.mod <- regsubsets(stroke~., stroke_data)
-summary(best.mod)
-
-# best model includes: age, avg_glucose_level, heart_disease, hypertension 
-# as relevant variables
-
-reg.summary <- summary(best.mod, nvar=5)
-names(reg.summary)
-par(mfrow=c(2,2))
-plot(reg.summary$rss, xlab="number of variables", ylab= "RSS", type='l')
-plot(reg.summary$adjr2, xlab = 'number of variables', ylab = 'Adjusted RSq', type = 'l')
-par(mfrow=c(1,1))
-
-# model with max adjr2 and identify it on the plot:
-which.max(reg.summary$adjr2) 
-points(8, reg.summary$adjr2[8], col='red', pch=20)
-
-plot(best.mod, scale='r2')
-plot(best.mod, scale='adjr2')
-plot(best.mod, scale='Cp')
-plot(best.mod, scale='bic')
-
-coef(best.mod, 8)
-
-################# TRAINING AND VALIDATION SETS ############
-# sum(stroke_data$stroke==0) --> 4700
-# sum(stroke_data$stroke==1) --> 209
-# 75% train: 3682 - 25% test
-# di questo 75% ne prendiamo 120 di stroke
-# 3562 without stroke
-no.strokes.data <- stroke_data[stroke == 0, ]
-rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
-
-yes.strokes.data <- stroke_data[stroke == 1, ]
-rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
-
-##TRAINING SET
-training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
-training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
-shuffle <- sample(nrow(training.set)) #shuffle the dataset, since the strokes are added in the last positions
-training.set <- training.set[shuffle, ]
-training.set
-dim(training.set)
-
-##VALIDATION SET
-val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
-val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
-shuffle <- sample(nrow(val.set)) #shuffle the dataset, since the strokes are added in the last positions
-val.set <- val.set[shuffle, ]
-
-attach(training.set)
-
-#mod.red.train
-mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
-                     data=training.set, family = binomial)
-mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
-par(mfrow=c(2,2))
-plot(mod.red.train)
-par(mfrow=c(1,1))
-
-mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
-                    age*heart_disease, data=training.set, family=binomial)
-mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
-par(mfrow=c(2,2))
-plot(mod1.train)
-par(mfrow=c(1,1))
-
-lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
-                       Residence_type + heart_disease, data=training.set)  #se metto gender mi dice "varabile costante"
-lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
-lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
-plot(lda.fit.train)
-
-qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+
-                       smoking_status, data = training.set)
-qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
-qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
-
-# The interaction qda, which has the same variable of the logistic interaction model,
-# improved a lot the result in the training set, but in the validation test 
-# it does perform the same as the previous qda
-qda.inter.fit.train <- qda(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
-                             age*heart_disease, data = training.set)
-qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
-qda.inter.fit.train.pred<- qda.inter.fit.train.pred$posterior[, 2]
-
-###########
-
-res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred, 
-                                 qda.fit.train.pred, qda.inter.fit.train.pred), training.set$stroke,
-                            yes_plot=FALSE)
-print(res)
-recall_thresholds = res$Thr.Prec.Rec 
-roc_thresholds = res$Thr.ROC
-
-
-#################### RECALL prediction for all models
-mod.red.train.pred.class = as.numeric(mod.red.train.pred >= roc_thresholds[1])
-table(mod.red.train.pred.class,training.set$stroke) #bad
-mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
-table(mod.red.train.pred.class, training.set$stroke)#good
-
-mod1.train.pred.class = as.numeric(mod1.train.pred >= roc_thresholds[2])
-table(mod1.train.pred.class,training.set$stroke)
-mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
-table(mod1.train.pred.class, training.set$stroke)
-
-lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= roc_thresholds[3])
-table(lda.fit.train.pred.class,training.set$stroke)
-lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= recall_thresholds[3])
-table(lda.fit.train.pred.class, training.set$stroke)
-
-qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= roc_thresholds[4])
-table(qda.fit.train.pred.class,training.set$stroke)
-qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= recall_thresholds[4])
-table(qda.fit.train.pred.class, training.set$stroke)
-
-qda.inter.fit.train.pred.class = as.numeric(qda.inter.fit.train.pred  >= recall_thresholds[5])
-table(qda.inter.fit.train.pred.class, training.set$stroke)
-
-####VALIDATION ORA FUNZIONA OTTIMAMENTE PER MOD.RED E MOD1
-####C'e da fare per lda e qda
-
-mod.red.val <- predict(mod.red.train, val.set, type="response")
-mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
-table(mod.red.val.class, val.set$stroke)
-
-mod1.val <- predict(mod1.train, val.set, type="response")
-mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
-table(mod1.val.class, val.set$stroke)
-
-lda.val <- predict(lda.fit.train, val.set)
-lda.val <- lda.val$posterior[, 2]
-lda.val.class = as.numeric(lda.val >= recall_thresholds[3])
-table(lda.val.class, val.set$stroke)
-
-qda.val <- predict(qda.fit.train, val.set)
-qda.val <- qda.val$posterior[, 2]
-qda.val.class = as.numeric(qda.val >= recall_thresholds[4])
-table(qda.val.class, val.set$stroke)
-
-# The interaction qda, which has the same variable of the logistic interaction model,
-# improved a lot the result in the training set, but in the validation test 
-# it does perform the same as the previous qda
-qda.inter.val <- predict(qda.inter.fit.train, val.set)
-qda.inter.val <- qda.inter.val$posterior[, 2]
-qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
-table(qda.inter.val.class, val.set$stroke)
-
