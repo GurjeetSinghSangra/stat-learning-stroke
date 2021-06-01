@@ -43,7 +43,7 @@ kable(stroke_data[1:5,], format = 'simple', align='ccccccccc',
 ## 2.1 Preprocessing
 
 The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected was referring to different people, thus no recidivist status were involved.
-After this check we removed the column from the dataset as it does not hold useful information for our study.
+After this check we removed the column from the dataset since it does not hold useful information for our study.
 ```{r}
 stroke_data<-stroke_data[,-1]
 ```
@@ -84,7 +84,7 @@ table(stroke)/dim(stroke_data)[1]
 barplot(table(stroke)/dim(stroke_data)[1],
         xlab='probability to have a stroke',col = c('#F8766D','#00BFC4'))
 ```
-This value is representative of the real situation in which there are not many stroke cases compared with the whole population. The incidence of stroke in Europe at the beginning of the 21st century varies from 95 to 290 cases/100,000^[QUADERNI dell'Italian Journal of Medicine, A Journal of Hospital and Internal Medicine, Michele Meschi,volume 8, issue 2, March-April 2020]. Furthermore in many clinical diseases analysis this issue is commonly present.
+This value is representative of the real situation in which there are not many stroke cases compared with the whole population. The incidence of stroke in Europe at the beginning of the 21st century varies from 95 to 290 cases/100,000^[QUADERNI dell'Italian Journal of Medicine, A Journal of Hospital and Internal Medicine, Michele Meschi,volume 8, issue 2, March-April 2020]. Furthermore in many clinical disease analyses this issue is commonly present.
 
 A visual transformation of the values seen in the `summary` function is provided in the following boxplots:
 ```{r, fig.height=3.5, fig.width=6.5}
@@ -96,7 +96,7 @@ par(mfrow=c(1,1))
 ```
 
 From above we can see that in the first two boxplots (starting from the left) there are lots of outliers, that can also be see from the summary looking at the difference between the third quantile and the maximum value in the `avg_glucose_level` and `bmi` variables.
-Actually, they represent real-scenario (few people are affected by high glucose levels) and possible interesting cases of pathologies bounded with diabetes. Hence these data points have to be considered during modeling, they could be helpful to predict stroke cases since as mentioned in the medical literature stroke could be also due to complications of diabetes.
+Actually, they represent real-case scenarios (few people are affected by high glucose levels) and possible interesting cases of pathologies bounded with diabetes. Hence these data points have to be considered during modeling, they could be helpful to predict stroke cases since as mentioned in the medical literature stroke could be also due to complications of diabetes.
 
 In order to compare entities in pairs and judge which of each entity is preferred, or has a greater amount of some quantitative property we provide a pair-wise plot. In addition, to involve also the categorical variables we wrote some useful function:
 ```{r}
