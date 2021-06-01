@@ -80,6 +80,7 @@ attach(stroke_data)
 In order to highlight and study better the data, we used some plots to study their statistics and distribution.
 A relevant and important information is provided by the following barplot, in which we see an unbalance dataset issue: 209 people on a total of 4909 get a stroke, i.e. the 4.25 % of the people.
 ```{r, fig.height=3, fig.width=3, fig.align='center'}
+table(stroke)
 table(stroke)/dim(stroke_data)[1]
 barplot(table(stroke)/dim(stroke_data)[1],
         xlab='probability to have a stroke',col = c('#F8766D','#00BFC4'))
@@ -148,7 +149,6 @@ boxplot(avg_glucose_level~stroke, xlab= 'stroke',
         ylab = 'average glucose level', col = c('#F8766D','#00BFC4'))
 boxplot(bmi~stroke, xlab = 'stroke', ylab = 'bmi',col = c('#F8766D','#00BFC4'))
 boxplot(age~stroke, xlab='stroke' ,ylab = 'age',col = c('#F8766D','#00BFC4'))
-#boxplot(heart_disease~stroke, xlab='stroke' ,ylab = 'heart_disease')
 par(mfrow=c(1,1))
 ```
 
@@ -171,6 +171,8 @@ Even with high `avg_glucose_level` and `bmi` it's not so straightforward to dete
 
 *be related to other disease (which are not correlated with stroke????) or there are still not enough complications to develop a stroke. Insomma l'associazione non e` cosi diretta e il problema sembra essere complicato perche non descrive una chiara classificazione guardando i punti.*
 
+### 2.2.1 Questions
+
 At this point we can ask some questions:
 
 * Is it possible to prevent ictus?
@@ -192,6 +194,8 @@ In this part of the predictive analysis we will present three different type of 
 
 While going on with the classification using logistic regression we could meet the following problems: non-linearity of the data, correlation of error terms, heteroschedasticity, outliers, leverage point and collinearity.
 
+**commenti a Mallow, adjusted R^2, BIC**
+
 ### 3.1.1 Full and Reduced Models
 
 We start with the full model to see if all the features of the dataset contribute positively/negatively on the prediction of a stroke.
@@ -201,28 +205,26 @@ summary(mod.full)
 ```
 Here we see that `age`, `avg_glucose_level` and `hypertension` are the variables most related to `stroke`.
 
-Let's use the residual plots to get more information about this model (we use `type="deviance"` because we have a binary response):
+Let's use the residual plots to get more information about this model (we use `type="deviance"` because we have a binary response).
+
 ```{r}
-mod.full.resid <- residuals(mod.full, type="deviance") 
-predicted <- predict(mod.full, type = "link")
-par(mfrow=c(1,2))
-plot(mod.full.resid~predicted)
-abline(h=0, col='red')
-qqnorm(mod.full.resid)
-qqline(mod.full.resid, col='red')
+par(mfrow=c(2,2))
+plot(mod.full)
 par(mfrow=c(1,1))
 ```
+
 The residual plots are not satisfactory because it is not easy to interpret them. From the right plot we can see that the data are not normal.
 
 We now make some test in order to find the best reduced model: we start from the full model and then remove all the features that have collinearity between each other,i.e. `work_type`, `Residence_type` and `ever_married`.
-```{r, results='hide'}
+```{r}
 mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
                   smoking_status + gender + heart_disease, family=binomial)
+summary(mod.red1)
 ```
 
 Also in this case the variables more important are the same of the ones found in the full moel but also `heart_disease` seems to contribute to the prediction.
 In this step we try to remove the `gender` variable:
-```{r, results='hide'}
+```{r}
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
                   smoking_status  + heart_disease, family=binomial) 
 summary(mod.red2)
@@ -238,15 +240,11 @@ summary(mod.red)
 ```
 For this model we also give a descriptive statistic through the residual plots:
 ```{r}
-mod.red.resid <- residuals(mod.red, type="deviance")
-predicted <- predict(mod.red, type = "link")
-par(mfrow=c(1,2))
-plot(mod.red.resid~predicted)
-abline(h=0, col='red')
-qqnorm(mod.red.resid)
-qqline(mod.red.resid, col='red')
+par(mfrow=c(2,2))
+plot(mod.red)
 par(mfrow=c(1,1))
 ```
+
 
 We can see from the residual vs predicted values the presence of high non-linearity in the dataset.
 In the qqplot instead we see that residuals do no follow a normal distribution.
@@ -343,13 +341,12 @@ We tried to use a polynomial model starting from the reduced model `mod.red` wit
 ```{r, results='hide'}
 mod.poly1 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
-summary(mod.poly1)
+
 mod.poly2 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                      + I(avg_glucose_level^2), family = binomial)
-summary(mod.poly2)
+
 mod.poly3 <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
-summary(mod.poly3)
 ```
 At the end of the tests nothing interesting appeared with polynomial models. There were no improvement in the results.
 
@@ -369,15 +366,14 @@ lda.pred.stroke <- lda.pred$posterior[, 2]
 
 Assumption: sample are normally distributed BUT NOT SAME variance among classes.
 ```{r}
-qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, data = stroke_data)
-# ERROR rank deficiency, i.e. some variables 
-# are collinear and one or more covariance matrices cannot be inverted to obtain the estimates in group 1 (Controls)!
+qda.fit <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+smoking_status, 
+               data = stroke_data)
 qda.pred <- predict(qda.fit, stroke_data)
 qda.pred.stroke <- qda.pred$posterior[, 2]
 table(qda.pred$class, stroke)
 ```
 
-# 4 Predictions
+# 4 Best Model Selection & Validation Test
 
 In order to split the dataset into validation, training and test sets we recall that the amount of data that we have is of 4909, so we decided to keep approximately the 75% of the data for the training phase: 3682 people of which 3562 are the ones which hadn't the stroke, while 120 had it.
 We didn't use the cross-validation because it was difficult to split tha data and bla bla.
@@ -396,34 +392,38 @@ Insomma significa che dobbiamo usare la Precision Recall curve.
 ```{r}
 library(pROC)
 library(ROCR)
-get.roc.recall.values <- function(pred_models, true_value) {
-  result <- data.frame(Threshold1=double(), Specificity=double(), Sensitivity=double(),
-                       Threshold2=double(), Recall=double(), Precision=double())
-  n_models = length(list(mod.red.probs,lda.pred.stroke, qda.pred.stroke))
+get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
+  result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
+                       Thr.Prec.Rec=double(), Recall=double(), Precision=double())
+  n_models = length(pred_models)
   par(mfrow=c(n_models, 2))
   for (pred in pred_models) {
+    ### ROC
     roc.res <- roc(true_value, pred, levels=c("0", "1"))
-    plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", 
-         ylab="True positive rate")
+    if (yes_plot==TRUE){
+      plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", 
+           ylab="True positive rate")
+    }
+    best.roc  <- coords(roc.res, "best")
+    ###
     
-    tmp.res  <- coords(roc.res, "best")
-    pred.rec = prediction(mod.red.probs, true_value)
+    ### PREC-REC
+    pred.rec = prediction(pred, true_value)
     perf = performance(pred.rec, "prec", "rec")
-    plot(perf)
+    if (yes_plot==TRUE){
+      plot(perf)
+    }
     pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
                              precision=perf@y.values[[1]])
+    pr_cutoffs <- pr_cutoffs[pr_cutoffs$recall>0 &  pr_cutoffs$precision >0, ]
     best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
     
-    result[nrow(result) + 1,] = c(tmp.res[1, 1], tmp.res[1, 2], tmp.res[1, 3], 
+    result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
                                   best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
   }
   par(mfrow=c(1, 1))
   return(result)
 }
-mod.red <- glm(stroke~age + avg_glucose_level + hypertension + bmi, data=stroke_data, 
-               family = binomial)
-summary(mod.red)
-mod.red.probs <- predict(mod.red,type="response")
 ```
 
 ## 4.2 Training Set
@@ -448,6 +448,75 @@ shuffle <- sample(nrow(training.set))
 training.set <- training.set[shuffle, ]
 ```
 
+Now we evaluate the trainig models.
+```{r}
+attach(training.set)
+```
+
+Reduced Model:
+```{r}
+# mod.red.train
+mod.red.train <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
+                     data=training.set, family = binomial)
+mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
+
+# mod1.train
+mod1.train <- glm(stroke~age + avg_glucose_level+ heart_disease+ hypertension + 
+                    age*heart_disease, data=training.set, family=binomial)
+mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
+
+# lda.fit.train
+lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_status+
+                       Residence_type + heart_disease, data=training.set)
+lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
+lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
+
+# qda.fit.train
+qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease +
+                       smoking_status, data = training.set)
+qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
+qda.fit.train.pred<- qda.fit.train.pred$posterior[, 2]
+
+# qda.inter.fit.train
+qda.inter.fit.train <- qda(stroke~age + avg_glucose_level+ heart_disease+ 
+                             hypertension + age*heart_disease, data = training.set)
+qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
+qda.inter.fit.train.pred<- qda.inter.fit.train.pred$posterior[, 2]
+```
+
+The interaction qda, which has the same variable of the logistic interaction model,improved a lot the result in the training set, but in the validation test 
+it does perform the same as the previous qda.
+
+We apply this
+```{r, message=FALSE}
+res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, 
+                                 lda.fit.train.pred, qda.fit.train.pred,
+                                 qda.inter.fit.train.pred),training.set$stroke,
+                            yes_plot=FALSE)
+print(res)
+recall_thresholds = res$Thr.Prec.Rec 
+roc_thresholds = res$Thr.ROC
+```
+
+Nice:
+```{r}
+mod.red.train.pred.class = as.numeric(mod.red.train.pred >= roc_thresholds[1])
+table(mod.red.train.pred.class,training.set$stroke)
+mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
+table(mod.red.train.pred.class, training.set$stroke, dnn=c('ground thruth','pred'))
+
+mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
+table(mod1.train.pred.class, training.set$stroke)
+
+lda.fit.train.pred.class = as.numeric(lda.fit.train.pred>=recall_thresholds[3])
+table(lda.fit.train.pred.class, training.set$stroke)
+
+qda.fit.train.pred.class = as.numeric(qda.fit.train.pred>= recall_thresholds[4])
+table(qda.fit.train.pred.class, training.set$stroke)
+
+qda.inter.fit.train.pred.class  = as.numeric(qda.inter.fit.train.pred >= recall_thresholds[5])
+table(qda.inter.fit.train.pred.class, training.set$stroke)
+```
 
 ## 4.3 Validation Set
 
@@ -459,7 +528,42 @@ shuffle <- sample(nrow(val.set))
 val.set <- val.set[shuffle, ]
 ```
 
+Models on validation
+```{r}
+mod.red.val <- predict(mod.red.train, val.set, type="response")
+mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
+table(mod.red.val.class, val.set$stroke)
 
-# 5 Conclusions
+mod1.val <- predict(mod1.train, val.set, type="response")
+mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
+table(mod1.val.class, val.set$stroke)
 
-Si stima che la percentuale di persone che possono avere un ictus andrà via via crescendo dal momento che l'età media della popolazione è in costante crescita.
+lda.val <- predict(lda.fit.train, val.set)
+lda.val <- lda.val$posterior[, 2]
+lda.val.class = as.numeric(lda.val >= recall_thresholds[3])
+table(lda.val.class, val.set$stroke)
+
+qda.val <- predict(qda.fit.train, val.set)
+qda.val <- qda.val$posterior[, 2]
+qda.val.class = as.numeric(qda.val >= recall_thresholds[4])
+table(qda.val.class, val.set$stroke)
+
+qda.inter.val <- predict(qda.inter.fit.train, val.set)
+qda.inter.val <- qda.inter.val$posterior[, 2]
+qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
+table(qda.inter.val.class, val.set$stroke)
+
+```
+
+The interaction qda, which has the same variable of the logistic interaction model,
+improved a lot the result in the training set, but in the validation test 
+it does perform the same as the previous qda
+
+# 5 Conclusions and Further Analysis
+
+Si stima che la percentuale di persone che possono avere un ictus andrà via via 
+crescendo dal momento che l'età media della popolazione è in costante crescita.
+
+Risposta alle domande ed eventualmente riferimenti ai plot.
+
+Consigli di aggiungere features
