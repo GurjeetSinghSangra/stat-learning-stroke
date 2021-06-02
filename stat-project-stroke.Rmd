@@ -184,7 +184,7 @@ We will explore the data trying to answer them.
 
 # 3 Modeling
 
-###mi manca questo: **exp(beta) and odds for the prediction of success**
+###manca questo: **exp(beta) and odds for the prediction of success**
 
 We will now present some different approaches for the classification of the data.
 
@@ -193,7 +193,7 @@ We will now present some different approaches for the classification of the data
 Logistic regression can be defined as a type of generalized linear model (GLM). In particular, it is a statistical model used to examine the association of categorical or continuous independent variables with one dichotomous dependent variable. Therefore we start with it because we are dealing with "1" in case of stroke and "0" in case of no-stroke.  
 While going on with the classification using logistic regression we could meet the following problems: non-linearity of the data, correlation of error terms, heteroscedasticity, outliers, leverage point and collinearity.  
 
-In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. We will apply the Akaike Information Criterion (AIC) as selection of the candidate models (value given directly from the function "summary").We decide to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression.
+In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. We will apply the Akaike Information Criterion (AIC) as selection of the candidate models (value given directly from the function "summary"). We decide to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression.
 
 ### 3.1.1 Full and Reduced Models
 
@@ -203,7 +203,7 @@ mod.full <- glm(stroke~., data=stroke_data, family = binomial)
 summary(mod.full)
 ```
 Here we see that `age`, `avg_glucose_level` and `hypertension` are the variables most related to `stroke`.
-Let's use the residual plots to get more information about this model (we use `type="deviance"` because of the binary response):
+Let's use the residual plots to get more information about this model:
 ```{r}
 par(mfrow=c(2,2))
 plot(mod.full)
@@ -219,7 +219,7 @@ mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension +
 summary(mod.red1)
 ```
 
-Also in this case the variables more important are the same of the ones found in the full model, with the difference of `heart_disease`  that seems to help the improvement of the prediction.
+Also in this case the variables more important are the same of the ones found in the full model, with the difference of `heart_disease`  that seems to bring about an improvement on the prediction.
 In this step we remove the `gender` variable:
 ```{r}
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
@@ -227,14 +227,15 @@ mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension +
 summary(mod.red2)
 ```
 
-The variables left to eliminate are `bmi` and `smoking_status`, and we end up with the final reduced model:
+The variables left to eliminate are `bmi` and `smoking_status`.   
+We define the final reduced model:
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|$$
 ```{r}
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
                data=stroke_data, family = binomial)
 summary(mod.red)
 ```
-For this model, we also give a descriptive statistic through the residual plots:
+For this model, we give a descriptive statistic through the residual plots:
 ```{r}
 par(mfrow=c(2,2))
 plot(mod.red)
@@ -250,7 +251,7 @@ Indeed we can find not spread equal residuals around a horizontal line without d
 We discover that residuals do no follow a normal distribution.
 We know that obtaining positive coefficient estimates, we have a positive association. So, the larger the value, the higher is the estimated probability of stroke.    
 **Scale-Location**  
-We can see that homoscedasticity does not hold since the line of the standard residual is not flat, hence even by standardizing the residual we end up having high variance among residuals. But in our case, as you can notice from this plot, the red line is slightly curved and the residuals seem to increase as the fitted Y values increase. So, the inference here is, heteroscedasticity exists.  
+We can see that homoscedasticity does not hold since the line of the standard residual is not flat, hence even by standardizing the residual we finish having high variance among residuals. But in our case, as we can notice from this plot, the red line is slightly curved and the residuals seem to increase as the fitted Y values increase. So, the inference here is, heteroscedasticity exists.  
 **Residual vs Leverage**  
 Looking at the leverage plot, we see the presence of some sample with high leverage values (bottom right), which could influence the prediction of the model (even if the R-plot does not show us its index).
 
@@ -262,12 +263,12 @@ kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc',
 ```
 
 
-If we compare the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better the data than the full one. Indeed, the AIC is a lower number than the one of the full model. 
+If we compare the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lowest.   
 To have a confirmation of this concept, we use `anova`, a function which compares them and returns the best:
 ```{r}
 anova(mod.full, mod.red, test="Chisq")
 ```
-As expected, the anova test rejects that the complex model is more significant than the reduced one, since the p-value is not less than 5%. Hence the full model does not help with the prediction.
+As expected, the anova test rejects that the complex model is more significant than the reduced one, since the p-value is not less than 5%. Therefore the full model does not help with the prediction.
 
 
 ## 3.1.2 Interaction
