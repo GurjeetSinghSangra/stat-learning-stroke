@@ -344,7 +344,7 @@ lda.fit.train <- lda(stroke~age+bmi+avg_glucose_level+hypertension+smoking_statu
                        Residence_type + heart_disease, data=training.set) 
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
-#plot(lda.fit.train)
+
 
 qda.fit.train <- qda(stroke~age+bmi+avg_glucose_level+hypertension+heart_disease+
                        smoking_status, data = training.set)
