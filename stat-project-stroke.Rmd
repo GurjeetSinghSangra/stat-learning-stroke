@@ -193,7 +193,7 @@ In order to explore different approaches for predicting the qualitative response
 
 Logistic regression can be defined as a type of generalized linear model (GLM). In particular, it is a statistical model used to examine the association of categorical or continuous independent variables with one dichotomous dependent variable.  
 Rather than computing directly the response $Y$, logistic regression computes the probability that $Y$ belongs to a particular category, in our case $1$ if the person has a stroke disease, $0$ otherwise.  
-In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. We will apply the Akaike Information Criterion (AIC) as selection of the candidate models (value given directly from the function `summary`).  
+In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. We will apply the Akaike Information Criterion (AIC) as selection of the candidate models (given directly from the `summary` function).  
 We decide to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression.
 
 
@@ -201,7 +201,7 @@ We decide to exclude the Mallow's Cp and the R^2 adjusted techniques because the
 ## 3.1.1 Full and Reduced Models
 
 We start with the full model to see if all the features of the dataset contribute on the prediction of a stroke.  
-Up to now we have already mentioned if some predictor seems to be more or less correlated to the response variable, and a way for analyze such a relation is by introducing the null hypothesis. In the case of the full model, we are dealing with $10$ explanatory variables and so we have 
+Up to now we have already mentioned if some predictors seem to be more or less correlated to the response variable, and a way for analyze such relation is by introducing the null hypothesis. In the case of the full model, we are dealing with $10$ explanatory variables and so we have 
 $$H_0 : \beta_1 = \dots = \beta_{10} = 0$$
 and this means that we are making the assumption that no predictors is somehow related with `stroke`. If we reject the null hypothesis we are assuming that there is in fact a correlation and we have to find which feature is involved.  
 To decide whether or not reject $H_0$ we look at the p-values: in our case we decide to put $\alpha = 0.1$, for p-values smaller than $\alpha$ we keep the feature, otherwise we remove it from the model. This means that we will end up with an accuracy of the $90\%$ in the classification.  
@@ -218,7 +218,7 @@ plot(mod.full)
 par(mfrow=c(1,1))
 ```
 
-The plots are not satisfactory because they are not easy to interpret. It is simply evident that data do not follow a linear trend.
+The plots are not satisfactory because they are not easy to interpret. It is simply evident that data do not follow a linear trend (we will discuss more in detail in the next paragraphs).
 
 We now go on with some tests, we take the full model and we remove all the predictors that show up collinearity between each other, i.e. `work_type`, `Residence_type` and `ever_married`, following a sort of greedy backward selection:
 ```{r}
@@ -249,9 +249,9 @@ An important thing to notice is that there has been a decreasing on the p-value 
 This means that our probability to get a stroke becomes:
 $$p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}$$
 where $\beta_0, \dots, \beta_4$ can be read in the `summary` of `mod1` with the respectively variables $X_1, \dots, X_4$ which represent `age`, `avg_glucose_level`, `heart_disease` and `hypertension`.  
-From $p(X)$ we can get the quantity $p(X)/(1-p(X))$ which is called *odds*, and can take any value between $0$ and $\infty$. Values of odds close to $0$ and $\infty$ indicates very low and very high probabilities to get a stroke, respectively.  
-In our logistic regression model, increasing $X_i$ by one unit multiplies the odds by $e^{\beta_i}$, for $i=1, \dots, 4$. The amount of change in $p(X)$ due to a one-unit change in $X_i$ depend on the current value of $X_i$. But regardless of the value of $X_i$, if $\beta_i$ is positive than increasing $X_i$ will be associated with increasing $p(X)$, and if $\beta_i$ is negative than increasing $X_i$ will be associated with decreasing $p(X)$, for $i=1, \dots, 4$.  
-The fact that there is not a straight-line relationship between $p(X)$ and $X_i$, and the fact that the rate of change in $p(X)$ per unit change in $X_i$ depend on the current value of $X_i$
+From $p(X)$ we can get the quantity $p(X)/(1-p(X))$ which is called *odds*, and it can take any value between $0$ and $\infty$. Values of odds close to $0$ and $\infty$ indicates very low and very high probabilities to get a stroke, respectively.  
+In our logistic regression model, increasing $X_i$ by one unit multiplies the odds by $e^{\beta_i}$, for $i=1, \dots, 4$. The amount of change in $p(X)$ due to a one-unit change in $X_i$ depends on the current value of $X_i$. But regardless of the value of $X_i$, if $\beta_i$ is positive than increasing $X_i$ will be associated with increasing $p(X)$, and if $\beta_i$ is negative than increasing $X_i$ will be associated with decreasing $p(X)$, for $i=1, \dots, 4$.  
+The fact that there is not a straight-line relationship between $p(X)$ and $X_i$, and the fact that the rate of change in $p(X)$ per unit change in $X_i$ depends on the current value of $X_i$
 
 For this model we also give a descriptive statistic through the residual plots:
 ```{r}
@@ -264,17 +264,17 @@ Reading and interpreting these graphs, we can state some important outcomes:
 
 **Residuals vs Fitted**  
 We can observe the presence of high non-linearity in the dataset.
-Indeed we can find not spread equal residuals around a horizontal line without distinct patterns, attesting to the fact we don't have a linear relationship. 
+Indeed we can find not spread equal residuals around a horizontal line without distinct patterns, attesting to the fact that there is no linear relationship. 
 
 **Normal Q-Q**  
 We discover that residuals do no follow a normal distribution.  
 We know that obtaining positive coefficient estimates, we have a positive association. So, the larger the value the higher is the estimated probability of stroke. 
 
 **Scale-Location**  
-We can see that homoscedasticity does not hold since the line of the standard residual is not flat, hence even by standardizing the residual we end up having high variance among residuals. But in our case, as you can notice from this plot, the red line is slightly curved and the residuals seem to increase as the fitted Y values increase. So, the inference here is, heteroscedasticity exists.
+We can see that homoscedasticity does not hold since the line of the standard residual is not flat, hence even by standardizing the residual we end up having high variance among residuals. But in our case, as you can notice from this plot, the red line is slightly curved and the residuals increase as the fitted Y values increase. So, the inference here is, heteroscedasticity exists.
 
 **Residual vs Leverage**  
-Looking at the leverage plot, we see the presence of a sample with high leverage values (bottom right), which could influence the prediction of the model (even if the R-plot does not show us its index).   
+Looking at the leverage plot, we see the presence of some samples with high leverage value (bottom right), which could influence the prediction of the model (even if the R-plot does not show us its index).   
 Moreover, there are obvious outliers (they have no connection with our regression) with high variance:
 ```{r, echo=FALSE}
 kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc', 
@@ -287,7 +287,7 @@ To have a confirmation of this concept, we use 'anova', a function which compare
 ```{r}
 anova(mod.full, mod.red, test="Chisq")
 ```
-As expected, the anova test rejects that the complex model is more pertinent than the reduced one, since the p-value of its features are not less than $5\%$. Therefore the full model does not enhance the prediction.
+As expected, the anova test rejects that the full model is more pertinent than the reduced one, since the p-value of its features are not less than $5\%$ or even $10\%$. Therefore the full model does not enhance the prediction.
 
 ## 3.1.2 Interaction Models
 
@@ -301,21 +301,21 @@ mod1 <- glm(stroke~age + avg_glucose_level + heart_disease+ hypertension +
                age*heart_disease, family=binomial)
 summary(mod1)
 ```
-We go on considering all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` was the best of the possible relation even if it can not improve the previous model.  
+We considered all the interaction of `avg_glucose_level` with the remaining predictors and found out that `avg_glucose_level*hypertension` was the best of the possible relation even if it can not improve the previous model.  
 It has an AIC of 1385.9.
 ```{r}
 mod2 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension +
               avg_glucose_level*hypertension, family=binomial)
 summary(mod2)
 ```
-Ultimately, we have the interaction `heart_disease*hypertension` which seems a good version and returns an AIC 1384.5 for the model.
+Ultimately, we have the interaction `heart_disease*hypertension` which shows a good version and returns an AIC 1384.5 for the model.
 ```{r}
 mod3 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension + 
             heart_disease*hypertension, family=binomial)
 summary(mod3)
 ```
 
-After that, we pick up `mod.red` without `heart_disease` which represents the explanatory feature with higher p-value and we continue to work in the same way we have just seen. We repeat the scheme with `age`, without earning benefits.  
+After that, we picked up the reduced model without `heart_disease` which represents the explanatory feature with higher p-value and we continue to work in the same way we have just seen. We repeated the scheme with `age`, without earning benefits.  
 The AIC has a value of 1386.2.
 ```{r, results='hide'}
 mod4 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
@@ -328,8 +328,8 @@ mod5 <- glm(stroke ~ age + avg_glucose_level + hypertension +
               avg_glucose_level*hypertension, family=binomial)
 summary(mod5)
 ```
-In the end, we include the possible best interactions into the reduced model.
-It could be a good way, in fact it does not represent our winner due to a high p-value.  
+In the end, we included the possible best interactions into the reduced model.
+It could be a good way, in fact it does not represent our best solution due to a high p-value.  
 The corresponding AIC is 1384.2.
 ```{r, results='hide'}
 mod6 <- glm(stroke ~ age + avg_glucose_level + heart_disease+ hypertension +
