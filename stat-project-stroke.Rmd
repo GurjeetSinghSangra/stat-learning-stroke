@@ -184,7 +184,7 @@ We will explore the data trying to answer them.
 
 # 3 Modeling
 
-###manca questo: **exp(beta) and odds for the prediction of success**
+###mi manca questo: **exp(beta) and odds for the prediction of success**
 
 We will now present some different approaches for the classification of the data.
 
@@ -228,7 +228,7 @@ summary(mod.red2)
 ```
 
 The variables left to eliminate are `bmi` and `smoking_status`.   
-We define the final reduced model:
+Now we can define the final reduced model:
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|$$
 ```{r}
 mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
@@ -244,16 +244,16 @@ par(mfrow=c(1,1))
 
 Reading and interpreting these graphs, we can state some important outcomes: 
 
-**Residuals vs fitted**    
+**Residuals vs Fitted**    
 We can observe the presence of high non-linearity in the dataset.
 Indeed we can find not spread equal residuals around a horizontal line without distinct patterns, attesting to the fact we don't have a linear relationship.     
 **Normal Q-Q**  
 We discover that residuals do no follow a normal distribution.
-We know that obtaining positive coefficient estimates, we have a positive association. So, the larger the value, the higher is the estimated probability of stroke.    
+We know that obtaining positive coefficient estimates, we have a positive association. So, the larger the value the higher is the estimated probability of stroke.    
 **Scale-Location**  
 We can see that homoscedasticity does not hold since the line of the standard residual is not flat, hence even by standardizing the residual we finish having high variance among residuals. But in our case, as we can notice from this plot, the red line is slightly curved and the residuals seem to increase as the fitted Y values increase. So, the inference here is, heteroscedasticity exists.  
 **Residual vs Leverage**  
-Looking at the leverage plot, we see the presence of some sample with high leverage values (bottom right), which could influence the prediction of the model (even if the R-plot does not show us its index).
+Looking at the leverage plot, we see the presence of a sample with high leverage values (bottom right), which could influence the prediction of the model (even if the R-plot does not show us its index).
 
 Moreover, there are obvious **outliers** (they have no connection with our regression) with high variance:
 ```{r, echo=FALSE}
@@ -263,64 +263,64 @@ kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc',
 ```
 
 
-If we compare the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lowest.   
+If we compare the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lower of the two.   
 To have a confirmation of this concept, we use `anova`, a function which compares them and returns the best:
 ```{r}
 anova(mod.full, mod.red, test="Chisq")
 ```
-As expected, the anova test rejects that the complex model is more significant than the reduced one, since the p-value is not less than 5%. Therefore the full model does not help with the prediction.
+As expected, the anova test rejects that the complex model is more significant than the reduced one, since the p-value is not less than 5%. Therefore the full model does not enhance the prediction.
 
 
-## 3.1.2 Interaction
+## 3.1.2 Interaction Models
 
-In order to see which variables were relevant on our research we tested various models using the mixed approach: we started by the reduced model `mod.red` and then tested some interaction between the explanatory variables for improving the performance of the model.
+Let's try to check other various models using a mixed approach. We use the reduced model `mod.red` as landmark and we proceed with interactions between the explanatory variables with the aim to understand which variables are relevant on our research and to improve the performance of the model. We remember that we move on with our selection choosing significance levels equal to 0.01 and searching for an AIC value less and less.  
+The model `mod.red` has `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
+We recall that its AIC is 1384.6.  
+###**commento sul threshold --> teniamo il 90%** 
 
-We started with `mod.red`, which had `stroke` as response and `age`, `avg_glucose_level`,`hypertension` and `heart_disease` as predictors.
-We recall that its AIC was 1384.6.
-**commento sul threshold --> teniamo il 90%**
-We then consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`,`hypertension` and `heart_disease`: we find out that only `age*heart_disease` was relevant between the ones tested, with an AIC = 1384, which was lower than the one of the reduced model `mod.red`:
-$$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|$$
+Initially we consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`, `hypertension` and `heart_disease`: we realize that only `age*heart_disease` is relevant.  
+AIC = 1384
 ```{r}
 mod1 <- glm(stroke~age + avg_glucose_level + heart_disease+ hypertension +
                age*heart_disease, family=binomial)
 summary(mod1)
 ```
-We went on considering all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` was the best of the possible interaction but cannot improve the previous model, it had an AIC of 1385.9.
+We go on considering all the relation of `avg_glucose_level` with the remaining predictors and we find out that `avg_glucose_level*hypertension` is the best of the possible interaction even if it can not improve the previous model.    
+AIC = 1385.9
 ```{r, results='hide'}
 mod2 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension +
               avg_glucose_level*hypertension, family=binomial)
-summary(mod2)
 ```
-In the end it was left the interaction `heart_disease*hypertension` which return an AIC 1384.5 for the model.
-```{r, echo = FALSE}
+Ultimately, we have the interaction `heart_disease*hypertension` which seems a good version.  
+AIC = 1384.5
+```{r}
 mod3 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension + 
             heart_disease*hypertension, family=binomial)
 summary(mod3)
 ```
-
-We then tried to see the results of the `mod.red` without `heart_disease` which was the explanatory variables with higher p-value, and then we added some interaction terms, starting with the one with `age`:
+After that, we pick up `mod.red` without `heart_disease` which represents the explanatory feature with higher p-value and we continue to work in the same way have just seen. We repeat the scheme with `age`, without earning progresses.  
+AIC = 1386.2
 ```{r, results='hide'}
 mod4 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
               age*hypertension, family=binomial)
-summary(mod4)
 ```
-The AIC of this model was 1386.2, higher that the ones seen on the previous tested models.
-We go further testing also the interaction add `avg_glucose_level*hypertension`
+We go further testing also the interaction add `avg_glucose_level*hypertension`.  
+AIC = 1387.6
 ```{r, results='hide'}
 mod5 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
               avg_glucose_level*hypertension, family=binomial)
-summary(mod5)
 ```
-It had an AIC = 1387.6.
-In the end we return on our base model, `mod.red` and add the teo best iteractions, i.e. the two terms that reduced the AIC term:
-```{r, results='hide'}
+In the end, we include the possible best interactions into the reduced model.
+It could be a good way, in fact it does not represent our winner due to a high p-value.  
+AIC = 1384.2
+```{r}
 mod6 <- glm(stroke ~ age + avg_glucose_level + heart_disease+ hypertension +
               age*heart_disease + heart_disease*hypertension, family=binomial)
 summary(mod6)
 ```
-It has AIC = 1384.2 but the interactions had a p-value greater than 0.1 and it didn't seem to represent our data properly.
-At the end of all we promote `mod1` as the model which better fits our data.
 
+As conclusion, we can promote `mod1` as the model which better fits our data:
+$$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|$$
 Let's now see some relevant information, such as outliers on the `mod1`:
 ```{r, echo=FALSE}
 kable(stroke_data[c("207","150","100"), ], format = 'simple', align='cccccccc', 
@@ -328,9 +328,11 @@ kable(stroke_data[c("207","150","100"), ], format = 'simple', align='cccccccc',
                     'work_type','res_type','glucose', 'bmi','smoking','stroke'))
 ```
 
-but also leverage point and collinearity:
-```{r,fig.dim=c(3.5,3.5)}
-plot(mod1)
+and other properties and characteristics:
+```{r}
+par(mfrow=c(2,2))
+plot(mod.full)
+par(mfrow=c(1,1))
 ```
 
 ## 3.1.3 Polynomial models
@@ -344,7 +346,7 @@ mod.poly2 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+
 mod.poly3 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
 ```
-However, we do not achieve anything interesting with polynomial model. There were no improvements in the results, seeing the value of the AIC which is very high.
+However, we do not achieve anything interesting with polynomial model. There are no improvements in the results, seeing the value of the AIC which is extremely high.
 
 ## 3.2 Bayesian models
 In this section we now study other type of predictive models, which are based on Bayesian concepts. These methods exploits conditional probability and Bayes theorems to make prediction, they are also widely used in classification problems because of their nice structure and properties . Furthermore we would like to compare their results with the logistic model in order to assess their performances.
