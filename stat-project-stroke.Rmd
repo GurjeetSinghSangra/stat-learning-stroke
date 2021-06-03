@@ -356,25 +356,27 @@ mod.poly3 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+
 ```
 However, we do not achieve anything interesting with polynomial model. There are no improvements in the results, seeing the value of the AIC which is extremely high.
 
-## 3.2 Bayesian models
+## 3.2 Bayesian modelling 
+In this section we now study other types of predictive models, which are based on Bayesian concepts. These methods exploit conditional probability and Bayes theorems to make predictions, they are also widely used in classification problems because of their nice structure and properties. Furthermore, we would like to compare their results with the logistic model in order to assess their performances. Recall that we have to consider the LDA and QDA models which approximate the Bayesian classifier (the ideal one) as from a computation point of view it is very expensive and requires that the likelihood and the prior distribution to be conjugate (i.e their distributions are from the same family of distribution).
 
-In this section we now study other type of predictive models, which are based on Bayesian concepts. These methods exploits conditional probability and Bayes theorems to make prediction, they are also widely used in classification problems because of their nice structure and properties. Furthermore we would like to compare their results with the logistic model in order to assess their performances.
-## 3.2.1 LDA
-
-We first consider the Linear Discriminant Analysis (LDA) for the Multivariate case, since we are dealing with multiple explanatory variables
-Assumption: samples are normally distributed and have same variance in every class => strong assumption.
+### 3.2.1 LDA
+We first consider the Linear Discriminant Analysis (LDA) by taking in account the Multivariate case. When we apply LDA model to approximate the Bayesian classifier we have assume that the likelihood follows a Normal distribution $X|G_j \sim \mathcal{N}(\mu_j,\,\Sigma) \quad j=0, 1$, and covariates with same $\Sigma$ for both classes. Hence we:
+$$P(G_j | X) \propto \pi_j \; \frac{1}{2\pi |\Sigma|^{1/2}} \exp \left(-0.5 (X - \mu)^\top \Sigma^{-1} (X-\mu) \right) \quad j=0,1 $$
+Where the parameters $\pi, \mu, \Sigma$ are plugged in with their associated estimator: $$\hat\pi = \frac{n_j}{n}, \hat\mu = \overline x_j, \hat\Sigma = \sum_{j=1}^{2} (X_i-\mu_j)^\top (X_i-\mu_j) / (n-2)$$.
+The LDA furthermore will assign for each sample the class with the largest posterior probability using the discrimination score.
+In the following code we fit the data by considering all the predictors independent to each other, in order to not have collinearity issue.
 ```{r}
 library(MASS)
 lda.fit <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension +  gender
                + smoking_status +  Residence_type + heart_disease)
 lda.pred <- predict(lda.fit)
-table(lda.pred$class, stroke)
 lda.pred.stroke <- lda.pred$posterior[, 2]
+table(lda.pred$class, stroke)
 ```
+Since we are dealing with an unbalanced dataset we are not satisfied with this criteria of assigning the class, thus in chapter 4 we will cover a better technique to define the best posterior threshold.
 
 ## 3.2.2 QDA
-
-Assumption: sample are normally distributed BUT NOT SAME variance among classes.
+Assuming homoscedasticity among the classes can be very restrictive in our case since the dataset is very unbalanced and skewed. Thus we considered also the Quadratic Discriminant Analysis (QDA) which estimates $\mu_j$ and $\Sigma_j$ for each class separately. This choice will turn out to have a more flexible and reliable model than the previous one
 ```{r}
 qda.fit <- qda(stroke ~ age + bmi + avg_glucose_level + hypertension + heart_disease 
                + smoking_status, data = stroke_data)
@@ -382,21 +384,49 @@ qda.pred <- predict(qda.fit, stroke_data)
 qda.pred.stroke <- qda.pred$posterior[, 2]
 table(qda.pred$class, stroke)
 ```
+As previously we will need to cover better the threshold of the QDA model due to the unbalanced data.
 
 # 4 Best Model Selection & Validation Test
+In this chapter of the report we are now going to evaluate our elective models that we have seen so far and pick the best among them. Furthermore we will also discuss the metrics used to define the best classification threshold of the predicted variables.
+The models that we elected for this analysis, which have shown to represent better our problem are: the two logistic regressions (reduced and interaction based), and the models built with the Bayesian modelling approach (LDA and QDA).  
+In order to assess them we used the validation testing method, hence we split the dataset into validation and training sets. But since our dataset is highly unbalanced we need to define the appropriate split in order to have reasonable amount of stroke cases in both sets.  
+We also recall that the data is made of 4909 instances and just the 4.25% of the persons are affected by the stroke. We decided then to keep the 75% of the data for the training data: 3682 samples of which 3562 are the ones that have not incurred to a stroke, while 120 of them had it. The remaining data are part of the validation set.
 
-In order to split the dataset into validation, training and test sets we recall that the amount of data that we have is of 4909, so we decided to keep approximately the 75% of the data for the training phase: 3682 people of which 3562 are the ones which hadn't the stroke, while 120 had it.
-We didn't use the cross-validation because it was difficult to split the data and bla bla.
+Cross-validation tests have not been developed since constructing disjoint splits and random sampling from the data is not feasible with just few cases of stroke from the whole dataset.
 
-## 4.1 ROC and PRECISION-RECALL Curves
+## 4.1 Data split
+In the following R code we developed the above mentioned splitting and sampling methodology.
 
-We introduced an hand-written function to make usefull plot because 
-Allora ieri guardando i plot della ROC curve io e francesca c'eravamo posti due domande sui risultati.
-Siccome siamo in un problema medico di predizione di ictus di un paziente oppure no, alla fine la ROC curve non e` molto d'aiuto perche massimizza i true positive con i true predicted. 
-Questo significa che possibilmenete gli errori di false negativo possono incrementare.
-In ambito del nostro problema e in generale in ambito medico se il nostro modello predice una persona senza ictus quando invece lo presenta, eh  questa e` un errore piu grave rispetto a un false positive.
-Noi vorremmo invece che il false negative sia basso e quindi considerato. 
-Insomma significa che dobbiamo usare la Precision Recall curve.
+First we retrieved the shuffled indices of the person which are affected and not by the stroke in different variables.
+```{r}
+no.strokes.data <- stroke_data[stroke == 0, ]
+rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
+
+yes.strokes.data <- stroke_data[stroke == 1, ]
+rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
+```
+
+We construct the training set made of 75% instances of persons that are not affected by the stroke, and the 57% of the stroke cases.
+```{r}
+training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
+training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
+shuffle <- sample(nrow(training.set))
+training.set <- training.set[shuffle, ]
+```
+The remaining data is then used for the validation set and it is made of 25% of person with no stroke and 42% with stroke.
+```{r}
+val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
+val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
+shuffle <- sample(nrow(val.set)) 
+val.set <- val.set[shuffle, ]
+```
+
+## 4.2 ROC and PRECISION-RECALL Curves
+Due to the high unbalance stroke rate defining the appropriate threshold on the predicted variable helps to overcome this issue and improves the results of the model. Note that all the models used until now give a probability output for each class, hence we will analyze the thresholds based on those output.  
+Since we are dealing with a clinical problem the presence of false negative (FN) cases is more critical than having false positive (FP) ones, for this reason we considered not just the ROC curve but also the Recall-Precision curve for each model.
+
+In order to make all these analyses we built a function that takes a list of model predictions, for each of them we evaluate the ROC and the Precision-Recall curves and we retrieve the best threshold of both curves in a data frame table, furthermore plot of the curves are also shown.  
+The best threshold for ROC curves corresponds to the value that maximize more the true positive rate and minimize the false positive rate. Instead for the Precision-Recall curve case we look for the value that minimize more the false negative rate (high recall value) and maximize also the precision, therefore we recover the best value by calculating the minimum value obtained by summing the recall and precision pairs.
 ```{r}
 library(pROC)
 library(ROCR)
@@ -434,69 +464,44 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
 }
 ```
 
-## 4.2 Training Set
 
-Insertion of the no-stroke people into the training set:
-```{r}
-no.strokes.data <- stroke_data[stroke == 0, ]
-rnd.idx.no.strokes <- sample(c(1:dim(no.strokes.data)[1]))
-```
+## 4.3 Model evaluation
 
-Insertion of the stroke people into the training set:
-```{r}
-yes.strokes.data <- stroke_data[stroke == 1, ]
-rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
-```
-
-We mix together the two parts and we use the `shuffle` function because the strokes are added in the last positions
-```{r}
-training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
-training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
-shuffle <- sample(nrow(training.set))
-training.set <- training.set[shuffle, ]
-```
-
-Now we evaluate the trainig models.
+We first fit all the elective models on our training set.
 ```{r}
 attach(training.set)
-```
-
-Reduced Model:
-```{r}
-# mod.red.train
+# Logistic reduced model
 mod.red.train <- glm(stroke ~ age + heart_disease + avg_glucose_level + hypertension, 
                      data=training.set, family = binomial)
 mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
 
-# mod1.train
+# Logistic interaction model
 mod1.train <- glm(stroke ~ age + avg_glucose_level+ heart_disease + hypertension + 
                     age*heart_disease, data=training.set, family=binomial)
 mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
 
-# lda.fit.train
+# LDA Model
 lda.fit.train <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension + 
                        smoking_status + Residence_type + heart_disease, 
                      data=training.set)
 lda.fit.train.pred <- predict(lda.fit.train, data=training.set)
 lda.fit.train.pred <- lda.fit.train.pred$posterior[, 2]
 
-# qda.fit.train
+# QDA model
 qda.fit.train <- qda(stroke ~ age + bmi + avg_glucose_level + hypertension +
                        heart_disease + smoking_status, data = training.set)
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
 qda.fit.train.pred <- qda.fit.train.pred$posterior[, 2]
 
-# qda.inter.fit.train
+# QDA interaction model.
 qda.inter.fit.train <- qda(stroke ~ age + avg_glucose_level+ heart_disease + 
                              hypertension + age*heart_disease, data = training.set)
 qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
 qda.inter.fit.train.pred <- qda.inter.fit.train.pred$posterior[, 2]
 ```
 
-The interaction qda, which has the same variable of the logistic interaction model,improved a lot the result in the training set, but in the validation test 
-it does perform the same as the previous qda.
-
-We apply this
+The next step instead involves the calculation of the best threshold by using two mentioned metrics.  
+Thus we use our built-in function by passing the elective models, we then print the summary of the results and extract the thresholds of the two metrics in different variables, which will be helpful when we will need to apply them.
 ```{r, message=FALSE}
 res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, 
                                  lda.fit.train.pred, qda.fit.train.pred,
@@ -507,7 +512,7 @@ recall_thresholds = res$Thr.Prec.Rec
 roc_thresholds = res$Thr.ROC
 ```
 
-Nice:
+Once fitting the models, we would like to see their performance in the training set in order to have a first evaluation, hence for each prediction we apply the associated threshold returned by the built-in function.
 ```{r}
 mod.red.train.pred.class <- as.numeric(mod.red.train.pred >= roc_thresholds[1])
 table(mod.red.train.pred.class,training.set$stroke)
@@ -526,16 +531,15 @@ table(qda.fit.train.pred.class, training.set$stroke)
 qda.inter.fit.train.pred.class  <- as.numeric(qda.inter.fit.train.pred >= recall_thresholds[5])
 table(qda.inter.fit.train.pred.class, training.set$stroke)
 ```
+From the above result we can see a clear example of impact of the designed thresholds in the results of the models. We can see that from the first two confusion matrices the difference between applying the ROC curve and the Precision-Recall threshold.
+The former tries to minimize the false positive errors by considering just the positive results, instead the latter one, as wee see from the output matrix, takes in consideration also the false negative cases. Therefore it results to minimize more the false negative rate, by allowing more errors for false positive values.  
+As mentioned before in clinical cases an error committed to diagnose a disease can be very dangerous, especially for prediction problem, when instead of predicting a stroke we classify them as harmless case.  
+For this reason, from now onwards, we will consider only the Recall-Precision values since we want to minimize those cases (FN) and overcome the unbalance issue.
+
+From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values for each scenario, in particular we define the optimum choice which minimize more both values but by giving more weight to false negative. 
+
 
 ## 4.3 Validation Set
-
-We mix shuffle together the remaining samples into forming the validation set.
-```{r}
-val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
-val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
-shuffle <- sample(nrow(val.set)) 
-val.set <- val.set[shuffle, ]
-```
 
 Models on validation
 ```{r}
