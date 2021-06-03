@@ -16,10 +16,7 @@ output:
 
 In the following report, we present an analysis computed on stroke disease, and we try to explain from statistical analysis some correlation factors and statistics of the given features/predictors by designing predictive models to predict the presence of stroke disease. In addition, we highlight possible linear and non-linear relationships among the given features (predictors) and the stroke disease variable (predicted variable).  
 "Stroke" is the medical term for damage to brain tissue or the death of a portion of it, due to insufficient blood supply to an area of the brain.  
-Our aim is to see if and how the variables we are dealing with are related, in order to predict which individual is more probable to have a stroke.  
-The symptoms of stroke vary from patient to patient, depending on the severity of the condition, the affected brain area, causes, type of stroke, etc.  
-Stroke is characterized by sudden onset and for this reason it involves the need for immediate therapeutic intervention and adapted to the needs of the patient.
-In this sense, looking for relation between features may help to prevent or assess it.
+Our aim is to see if and how the variables we are dealing with are related, in order to predict which individual is more probable to have a stroke. The symptoms of stroke vary from patient to patient, depending on the severity of the condition, the affected brain area, causes, type of stroke, etc.Stroke is characterized by sudden onset and for this reason it involves the need for immediate therapeutic intervention and adapted to the needs of the patient. In this sense, looking for relation between features may help to prevent or assess it.
 
 In order to have a guide for the interpretation of the data we underline the following information:
 
@@ -75,14 +72,14 @@ attach(stroke_data)
 ```
 
 In order to highlight and study better the data, we used some plots to study their statistics and distribution.  
-A relevant and important information is provided by the following barplot, in which we see an unbalance dataset issue: 209 people on a total of 4909 get a stroke, i.e. the 4.25 % of the people.
+A relevant and important information is provided by the following barplot, in which we see an unbalance dataset issue: $209$ people on a total of $4909$ get a stroke, i.e. the $4.25 \%$ of the people.
 ```{r, fig.height=3, fig.width=3, fig.align='center'}
 table(stroke)
 table(stroke)/dim(stroke_data)[1]
 barplot(table(stroke)/dim(stroke_data)[1],
         xlab='stroke',col = c('#F8766D','#00BFC4'))
 ```
-These values are representative of the real situation in which there are not many stroke cases compared with the whole population, the people who have had a stroke are much less than the ones who did not have it. The incidence of stroke in Europe at the beginning of the 21st century varies from 95 to 290 cases/100,000^[QUADERNI dell'Italian Journal of Medicine, A Journal of Hospital and Internal Medicine, Michele Meschi,volume 8, issue 2, March-April 2020]. Furthermore in many clinical disease analyses this issue is commonly present.
+These values are representative of the real situation in which there are not many stroke cases compared with the whole population, the people who have had a stroke are much less than the ones who did not have it. The incidence of stroke in Europe at the beginning of the 21st century varies from $95$ to $290$ cases/$100,000$^[QUADERNI dell'Italian Journal of Medicine, A Journal of Hospital and Internal Medicine, Michele Meschi,volume 8, issue 2, March-April 2020]. Furthermore in many clinical disease analyses this issue is commonly present.
 
 A visual transformation of the values seen in the `summary` function is provided in the following boxplots:
 ```{r bp, fig.height=3.5, fig.width=6.5, fig.cap='\\label{bp}Visual description of some features of the dataset'}
@@ -93,7 +90,7 @@ boxplot(age, xlab = 'age', pch=20, col='#00BA38')
 par(mfrow=c(1,1))
 ```
 
-From Figure \ref{bp} we can see that in the first two boxplots (starting from the left) there are lots of outliers, that can also be see from the summary looking at the difference between the third quantile and the maximum value in the `avg_glucose_level` and `bmi` variables.  
+From Figure \ref{bp} we can see that in the first two boxplots (starting from the left) there are lots of outliers, that can also be seen from the summary looking at the difference between the third quantile and the maximum value in the `avg_glucose_level` and `bmi` variables.  
 Actually, they represent real-case scenarios (people affected by high glucose levels or with a bmi out of parameters are only a few) and possible interesting cases of pathologies bounded with diabetes. Hence these data points have to be considered during modeling, they could be helpful to predict stroke cases because it could be due to complications of diabetes, as mentioned in the medical literature.
 
 In order to compare entities in pairs and judge which of each entity is preferred, or has a greater amount of some quantitative property we provide a pair-wise plot. In addition, to involve also the categorical variables we wrote some useful functions:
@@ -140,7 +137,7 @@ Figure \ref{pairs} shows that the stronger relationships involve quite often the
 In addition, we can see strong collinearity among th dummy variables `age`, `work_type`, and `ever_married`, this mean that they are closely related to one another. For this reason we get uncertainty in the coefficient estimates and so we do not consider them in the fitting of the models.
 
 We go on looking at some intuitive relationship of `stroke` with `age`,`bmi` and `avg_glucose_level`:
-```{r bp_stroke, fig.height=3.5, fig.width=6.5, fig.cap='\\label{bp_stroke}Visual rappresentation of the comparison between `stroke` and not-`stroke` of the features: `avg_glucose_level`, `bmi` and  `age`'}
+```{r bp_stroke, fig.height=3.5, fig.width=6.5, fig.cap='\\label{bp_stroke}Visual rappresentation of the comparison between `stroke`(1) and not-`stroke`(0) of the features: `avg_glucose_level`, `bmi` and  `age`'}
 par(mfrow=c(1,3))
 boxplot(avg_glucose_level~stroke, xlab= 'stroke', 
         ylab = 'average glucose level', col = c('#F8766D','#00BFC4'))
@@ -182,30 +179,28 @@ We will explore the data trying to answer them.
 
 In order to explore different approaches for predicting the qualitative response `stroke`, in the following paragraph we will cover three of the most widely-used classifiers: *logistic regression*, *linear discriminant analysis (LDA)* and *quadratic discriminant analysis (QDA)*. The prediction process is known as *classification*.  
 
-###manca questo: **exp(beta) and odds for the prediction of success**
-
 ## 3.1 Logistic Regression
 
 Logistic regression can be defined as a type of generalized linear model (GLM). In particular, it is a statistical model used to examine the association of categorical or continuous independent variables with one dichotomous dependent variable.  
 Rather than computing directly the response $Y$, logistic regression computes the probability that $Y$ belongs to a particular category, in our case $1$ if the person has a stroke disease, $0$ otherwise.  
 In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. We will apply the Akaike Information Criterion (AIC) as selection of the candidate models (value given directly from the function `summary`).  
-We decide to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression.
+We decided to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression and not so good in the case of generalized linear models.
 
 
 
-### 3.1.1 Full and Reduced Models
+## 3.1.1 Full and Reduced Models
 
 We start with the full model to see if all the features of the dataset contribute on the prediction of a stroke.  
 Up to now we have already mentioned if some predictor seems to be more or less correlated to the response variable, and a way for analyze such a relation is by introducing the null hypothesis. In the case of the full model, we are dealing with $10$ explanatory variables and so we have 
 $$H_0 : \beta_1 = \dots = \beta_{10} = 0$$
 and this means that we are making the assumption that no predictors is somehow related with `stroke`. If we reject the null hypothesis we are assuming that there is in fact a correlation and we have to find which feature is involve.  
 To decide whether or not reject $H_0$ we look at the p-values: in our case we decided to put $\alpha = 0.1$, for p-values smaller than $\alpha$ we keep the feature, otherwise we remove it from the model. This means that we will ended up with an accuracy of the $90\%$ in the classification.  
-Let's have a look now ath the characteristics of the full model:
+Let's have a look now at the characteristics of the full model:
 ```{r, fig.dim=c(3.5,3.5)}
 mod.full <- glm(stroke~., data = stroke_data, family = binomial)
 summary(mod.full)
 ```
-Here we see that `age`, `avg_glucose_level` and `hypertension` are the variables most related to `stroke`, with a p-value smaller than $0.005$.  
+Here we see that `age`, `avg_glucose_level` and `hypertension` are the variables most related to `stroke`, with a p-value smaller than $0.005$, also `heart_disease` contributes a bit to the model with a p-value of $0.092381$.  
 Let's use the residual plots to get more information about this model (we use `type="deviance"` because we have a binary response).
 ```{r}
 par(mfrow=c(2,2))
@@ -213,7 +208,7 @@ plot(mod.full)
 par(mfrow=c(1,1))
 ```
 
-The residual plots are not satisfactory because it is not easy to interpret them. It is simply evident that data do not follow a linear trend.
+The plots are not satisfactory because they are not easy to interpret. It is simply evident that data do not follow a linear trend.
 
 We now go on with some tests, we take the full model and we remove all the predictors that show up collinearity between each other, i.e. `work_type`, `Residence_type` and `ever_married`, following a sort of greedy backward selection:
 ```{r}
@@ -222,7 +217,7 @@ mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension +
 summary(mod.red1)
 ```
 
-Also in this case the variables more important are the same of the ones found in the full model, with the difference of `heart_disease`  that seems to help the improvement of the prediction.  
+Also in this case the relevant variables are the same of the ones found in the full model.  
 In this step we remove the `gender` variable:
 ```{r}
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
@@ -230,14 +225,24 @@ mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension +
 summary(mod.red2)
 ```
 
-The variables left to eliminate are `bmi` and `smoking_status` and `working_status`. Now we can define the final reduced model:
+The variables left to eliminate are `bmi`, `smoking_status` and `working_status`.  
+We are now able to define the final reduced model:
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|$$
 with four explanatory variables.
 ```{r}
-mod.red <- glm(stroke~age + heart_disease + avg_glucose_level+ hypertension, 
+mod.red <- glm(stroke~age + avg_glucose_level + heart_disease + hypertension, 
                data=stroke_data, family = binomial)
 summary(mod.red)
 ```
+An important thing to notice is that there has been a decreasing on the p-value of the explanatory variable `heart_disease`, that now have a p-value of $0.046895$.  
+
+This means that our probability to get a stroke become:
+$$p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}$$
+where $\beta_0, \dots, \beta_4$ can be read in the `summary` of `mod1` with the respectively variables $X_1, \dots, X_4$ which represent `age`, `avg_glucose_level`, `heart_disease` and `hypertension`.  
+From $p(X)$ we can get the quantity $p(X)/(1-p(X))$ which is called *odds*, and can take any value between $0$ and $\infty$. Values of odds close to $0$ and $\infty$ indicates very low and very high probabilities to get a stroke, respectively.  
+In our logistic regression model, increasing $X_i$ by one unit multiplies the odds by $e^{\beta_i}$, for $i=1, \dots, 4$. The amount of change in $p(X)$ due to a one-unit change in $X_i$ depend on the current value of $X_i$. But regardless of the value of $X_i$, if $\beta_i$ is positive than increasing $X_i$ will be associated with increasing $p(X)$, and if $\beta_i$ is negative than increasing $X_i$ will be associated with decreasing $p(X)$, for $i=1, \dots, 4$.  
+The fact that there is not a straight-line relationship between $p(X)$ and $X_i$, and the fact that the rate of change in $p(X)$ per unit change in $X_i$ depend on the current value of $X_i$
+
 For this model we also give a descriptive statistic through the residual plots:
 ```{r}
 par(mfrow=c(2,2))
@@ -276,9 +281,9 @@ As expected, the anova test rejects that the complex model is more significant t
 
 ## 3.1.2 Interaction Models
 
-Let's try to check other various models using a mixed approach. We use the reduced model `mod.red` as landmark and we proceed with interactions between the explanatory variables with the aim to understand which variables are relevant on our research and to improve the performance of the model. We remember that we move on with our selection choosing significance levels equal to $0.1$ and searching for an AIC value less and less.  
+Let's try to check other convenient models using a mixed approach. We use the reduced model `mod.red` as landmark and we proceed with interactions between the explanatory variables with the aim to understand which variables are relevant on our research and which improve the performance of the model. We remember that we move on with our selection choosing significance levels equal to $0.1$ and searching for an AIC value less and less.  
 The model `mod.red` has `stroke` as response and `age`, `avg_glucose_level`, `hypertension` and `heart_disease` as predictors.
-We recall that its AIC is 1384.6.
+We recall that its AIC is $1384.6$.
 
 Initially we consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`, `hypertension` and `heart_disease` and we find out that only `age*heart_disease` gives a relevant contribution.
 ```{r}
@@ -322,12 +327,7 @@ mod6 <- glm(stroke ~ age + avg_glucose_level + heart_disease+ hypertension +
 summary(mod6)
 ```
 As conclusion, we can promote `mod1` as the model which better fits our data:
-$$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|$$ 
-This means that our probability become:
-$$p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4+\beta_5 X_5}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4+\beta_5 X_5}}$$
-where $\beta_0, \dots, \beta_5$ can be read in the summary of the model `mod1` and also the respectively variables $X_1, \dots, X_5$ which represent `age`, `avg_glucose_level` and so with the other variables of the model.  
-From $p(X)$ we can get the quantity $p(X)/(1-p(X))$ which is called *odds* and can take any value between $0$ and $\infty$. This quantity is important because of its interpretation: an increment of one unit in the predictor $X_1$ cause and increment of $e^{\beta_1}$ in the probability of success.  
-**SISTEMARE (Fra)**
+$$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|avg_glucose_level| + \beta_3 \times \verb|heart_disease| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|$$
 Let's now see some relevant information, such as outliers on the `mod1`:
 ```{r, echo=FALSE}
 kable(stroke_data[c("207","150","100"), ], format = 'simple', align='cccccccc', 
@@ -344,7 +344,7 @@ par(mfrow=c(1,1))
 
 ## 3.1.3 Polynomial models
 
-Let's try to do one more test using the polynomial model starting from the reduced model `mod.red`, adding also `bmi` as predictor. We contribute with the square of `bmi`, `avg_glucose_level` and then both of them, obtaining `mod.poly1`,`mod.poly2` and `mod.poly3` respectively.
+Let's try to do one more test using the polynomial model starting from the reduced model `mod.red`, adding also `bmi` as predictor. We contribute with the square of `bmi`, `avg_glucose_level` and then both of them, obtaining `mod.poly1`, `mod.poly2` and `mod.poly3` respectively.
 
 ```{r, results='hide'}
 mod.poly1 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
@@ -360,8 +360,9 @@ However, we do not achieve anything interesting with polynomial model. There are
 
 ## 3.2 Bayesian models
 
-In this section we now study other type of predictive models, which are based on Bayesian concepts. These methods exploits conditional probability and Bayes theorems to make prediction, they are also widely used in classification problems because of their nice structure and properties . Furthermore we would like to compare their results with the logistic model in order to assess their performances.
+In this section we now study other type of predictive models, which are based on Bayesian concepts. These methods exploits conditional probability and Bayes theorems to make prediction, they are also widely used in classification problems because of their nice structure and properties. Furthermore we would like to compare their results with the logistic model in order to assess their performances.
 ## 3.2.1 LDA
+
 We first consider the Linear Discriminant Analysis (LDA) for the Multivariate case, since we are dealing with multiple explanatory variables
 Assumption: samples are normally distributed and have same variance in every class => strong assumption.
 ```{r}
@@ -387,9 +388,7 @@ table(qda.pred$class, stroke)
 # 4 Best Model Selection & Validation Test
 
 In order to split the dataset into validation, training and test sets we recall that the amount of data that we have is of 4909, so we decided to keep approximately the 75% of the data for the training phase: 3682 people of which 3562 are the ones which hadn't the stroke, while 120 had it.
-We didn't use the cross-validation because it was difficult to split tha data and bla bla.
-
-**CODICE CORRETTO**
+We didn't use the cross-validation because it was difficult to split the data and bla bla.
 
 ## 4.1 ROC and PRECISION-RECALL Curves
 
