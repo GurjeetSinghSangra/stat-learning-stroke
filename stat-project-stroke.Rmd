@@ -184,7 +184,7 @@ In order to explore different approaches for predicting the qualitative response
 Logistic regression can be defined as a type of generalized linear model (GLM). In particular, it is a statistical model used to examine the association of categorical or continuous independent variables with one dichotomous dependent variable.  
 Rather than computing directly the response $Y$, logistic regression computes the probability that $Y$ belongs to a particular category, in our case $1$ if the person has a stroke disease, $0$ otherwise.  
 In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. We will apply the Akaike Information Criterion (AIC) as selection of the candidate models (value given directly from the function `summary`).  
-We decided to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression and not so good in the case of generalized linear models.
+We decide to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression.
 
 
 
@@ -193,8 +193,8 @@ We decided to exclude the Mallow's Cp and the R^2 adjusted techniques because th
 We start with the full model to see if all the features of the dataset contribute on the prediction of a stroke.  
 Up to now we have already mentioned if some predictor seems to be more or less correlated to the response variable, and a way for analyze such a relation is by introducing the null hypothesis. In the case of the full model, we are dealing with $10$ explanatory variables and so we have 
 $$H_0 : \beta_1 = \dots = \beta_{10} = 0$$
-and this means that we are making the assumption that no predictors is somehow related with `stroke`. If we reject the null hypothesis we are assuming that there is in fact a correlation and we have to find which feature is involve.  
-To decide whether or not reject $H_0$ we look at the p-values: in our case we decided to put $\alpha = 0.1$, for p-values smaller than $\alpha$ we keep the feature, otherwise we remove it from the model. This means that we will ended up with an accuracy of the $90\%$ in the classification.  
+and this means that we are making the assumption that no predictors is somehow related with `stroke`. If we reject the null hypothesis we are assuming that there is in fact a correlation and we have to find which feature is involved.  
+To decide whether or not reject $H_0$ we look at the p-values: in our case we decide to put $\alpha = 0.1$, for p-values smaller than $\alpha$ we keep the feature, otherwise we remove it from the model. This means that we will end up with an accuracy of the $90\%$ in the classification.  
 Let's have a look now at the characteristics of the full model:
 ```{r, fig.dim=c(3.5,3.5)}
 mod.full <- glm(stroke~., data = stroke_data, family = binomial)
@@ -217,7 +217,7 @@ mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension +
 summary(mod.red1)
 ```
 
-Also in this case the relevant variables are the same of the ones found in the full model.  
+Also in this case the significant covariates are the same of the ones found in the full model.  
 In this step we remove the `gender` variable:
 ```{r}
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
@@ -225,7 +225,7 @@ mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension +
 summary(mod.red2)
 ```
 
-The variables left to eliminate are `bmi`, `smoking_status` and `working_status`.  
+The parameters left to eliminate are `bmi` and `smoking_status`.  
 We are now able to define the final reduced model:
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|$$
 with four explanatory variables.
@@ -236,7 +236,7 @@ summary(mod.red)
 ```
 An important thing to notice is that there has been a decreasing on the p-value of the explanatory variable `heart_disease`, that now have a p-value of $0.046895$.  
 
-This means that our probability to get a stroke become:
+This means that our probability to get a stroke becomes:
 $$p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}$$
 where $\beta_0, \dots, \beta_4$ can be read in the `summary` of `mod1` with the respectively variables $X_1, \dots, X_4$ which represent `age`, `avg_glucose_level`, `heart_disease` and `hypertension`.  
 From $p(X)$ we can get the quantity $p(X)/(1-p(X))$ which is called *odds*, and can take any value between $0$ and $\infty$. Values of odds close to $0$ and $\infty$ indicates very low and very high probabilities to get a stroke, respectively.  
@@ -264,8 +264,8 @@ We know that obtaining positive coefficient estimates, we have a positive associ
 We can see that homoscedasticity does not hold since the line of the standard residual is not flat, hence even by standardizing the residual we end up having high variance among residuals. But in our case, as you can notice from this plot, the red line is slightly curved and the residuals seem to increase as the fitted Y values increase. So, the inference here is, heteroscedasticity exists.
 
 **Residual vs Leverage**  
-Looking at the leverage plot, we see the presence of a sample with high leverage values (bottom right), which could influence the prediction of the model (even if the R-plot does not show us its index). 
-Moreover, there are obvious outliers (they have no connection with our regression) with high variance.  
+Looking at the leverage plot, we see the presence of a sample with high leverage values (bottom right), which could influence the prediction of the model (even if the R-plot does not show us its index).   
+Moreover, there are obvious outliers (they have no connection with our regression) with high variance:
 ```{r, echo=FALSE}
 kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc', 
       col.names = c('gender','age', 'hypert.', 'hd' ,'ev_marr',
@@ -277,42 +277,42 @@ To have a confirmation of this concept, we use 'anova', a function which compare
 ```{r}
 anova(mod.full, mod.red, test="Chisq")
 ```
-As expected, the anova test rejects that the complex model is more significant than the reduced one, since the p-value of its features are not less than $5\%$. Therefore the full model does not enhance the prediction.
+As expected, the anova test rejects that the complex model is more pertinent than the reduced one, since the p-value of its features are not less than $5\%$. Therefore the full model does not enhance the prediction.
 
 ## 3.1.2 Interaction Models
 
-Let's try to check other convenient models using a mixed approach. We use the reduced model `mod.red` as landmark and we proceed with interactions between the explanatory variables with the aim to understand which variables are relevant on our research and which improve the performance of the model. We remember that we move on with our selection choosing significance levels equal to $0.1$ and searching for an AIC value less and less.  
+Let's try to check other convenient models using a mixed approach. We use the reduced model `mod.red` as landmark and we proceed with interactions between the explanatory variables with the aim to understand which variables are relevant on our research and to improve the performance of the model. We remember that we move on with our selection choosing significance levels equal to $0.1$ and searching for an AIC value less and less.  
 The model `mod.red` has `stroke` as response and `age`, `avg_glucose_level`, `hypertension` and `heart_disease` as predictors.
 We recall that its AIC is $1384.6$.
 
-Initially we consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`, `hypertension` and `heart_disease` and we find out that only `age*heart_disease` gives a relevant contribution.
+Initially we consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`, `hypertension` and `heart_disease` and we verify that only `age*heart_disease` gives a relevant contribution. We get AIC = 1384. 
 ```{r}
 mod1 <- glm(stroke~age + avg_glucose_level + heart_disease+ hypertension +
                age*heart_disease, family=binomial)
 summary(mod1)
 ```
-We get AIC = 1384.  
-We go on considering all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` was the best of the possible interaction even if it can not improve the previous model.  
+We go on considering all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` was the best of the possible relation even if it can not improve the previous model.  
 It has an AIC of 1385.9.
-```{r, results='hide'}
+```{r}
 mod2 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension +
               avg_glucose_level*hypertension, family=binomial)
+summary(mod2)
 ```
-Ultimately, we have the interaction `heart_disease*hypertension` which seems a good version and return an AIC 1384.5 for the model.
-```{r, echo = FALSE}
+Ultimately, we have the interaction `heart_disease*hypertension` which seems a good version and returns an AIC 1384.5 for the model.
+```{r}
 mod3 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension + 
             heart_disease*hypertension, family=binomial)
 summary(mod3)
 ```
 
-After that, we pick up `mod.red` without `heart_disease` which represents the explanatory feature with higher p-value and we continue to work in the same way we have just seen. We repeat the scheme with `age`, without earning progresses.  
+After that, we pick up `mod.red` without `heart_disease` which represents the explanatory feature with higher p-value and we continue to work in the same way we have just seen. We repeat the scheme with `age`, without earning benefits.  
 The AIC has a value of 1386.2.
 ```{r, results='hide'}
 mod4 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
               age*hypertension, family=binomial)
 summary(mod4)
 ```
-We go further testing also the interaction add `avg_glucose_level*hypertension`.
+We go further analyzing also `avg_glucose_level*hypertension`.
 ```{r, results='hide'}
 mod5 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
               avg_glucose_level*hypertension, family=binomial)
@@ -344,15 +344,13 @@ par(mfrow=c(1,1))
 
 ## 3.1.3 Polynomial models
 
-Let's try to do one more test using the polynomial model starting from the reduced model `mod.red`, adding also `bmi` as predictor. We contribute with the square of `bmi`, `avg_glucose_level` and then both of them, obtaining `mod.poly1`, `mod.poly2` and `mod.poly3` respectively.
+Let's try to do one more test using the polynomial model starting from the reduced model `mod.red`, adding also `bmi` as predictor. We provide the square of `bmi`, `avg_glucose_level` and then both of them, obtaining `mod.poly1`, `mod.poly2` and `mod.poly3` respectively.
 
 ```{r, results='hide'}
 mod.poly1 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
                        I(bmi^2), family = binomial)
-
 mod.poly2 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
                      + I(avg_glucose_level^2), family = binomial)
-
 mod.poly3 <- glm(stroke ~ age + heart_disease + avg_glucose_level+ hypertension+bmi+
                       I(bmi^2) + I(avg_glucose_level^2), family = binomial)
 ```
