@@ -442,13 +442,15 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
   result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
                        Thr.Prec.Rec=double(), Recall=double(), Precision=double())
   n_models = length(pred_models)
-  par(mfrow=c(n_models, 2))
+  if (yes_plot==TRUE) {
+    png(filename="./curves.png")
+    par(mfrow=c(n_models, 2))
+  }
   for (pred in pred_models) {
     ### ROC
     roc.res <- roc(true_value, pred, levels=c("0", "1"))
     if (yes_plot==TRUE){
-      plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", 
-           ylab="True positive rate")
+      plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
     }
     best.roc  <- coords(roc.res, "best")
     ###
@@ -466,6 +468,9 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
     
     result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
                                   best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
+  }
+  if(yes_plot==TRUE){
+    dev.off()
   }
   par(mfrow=c(1, 1))
   return(result)
@@ -501,24 +506,20 @@ qda.fit.train <- qda(stroke ~ age + bmi + avg_glucose_level + hypertension +
 qda.fit.train.pred <- predict(qda.fit.train, data=training.set)
 qda.fit.train.pred <- qda.fit.train.pred$posterior[, 2]
 
-# QDA interaction model.
-qda.inter.fit.train <- qda(stroke ~ age + avg_glucose_level+ heart_disease + 
-                             hypertension + age*heart_disease, data = training.set)
-qda.inter.fit.train.pred <- predict(qda.inter.fit.train, data=training.set)
-qda.inter.fit.train.pred <- qda.inter.fit.train.pred$posterior[, 2]
 ```
 
 The next step instead involves the calculation of the best threshold by using two mentioned metrics.  
 Thus we use our built-in function by passing the elective models, we then print the summary of the results and extract the thresholds of the two metrics in different variables, which will be helpful when we will need to apply them.
 ```{r, message=FALSE}
 res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, 
-                                 lda.fit.train.pred, qda.fit.train.pred,
-                                 qda.inter.fit.train.pred),training.set$stroke,
-                                 yes_plot=FALSE)
+                                 lda.fit.train.pred, qda.fit.train.pred), 
+                            training.set$stroke,
+                            yes_plot=TRUE)
 print(res)
 recall_thresholds = res$Thr.Prec.Rec 
 roc_thresholds = res$Thr.ROC
 ```
+![unchanged image](curves.png)
 
 Once fitting the models, we would like to see their performance in the training set in order to have a first evaluation, hence for each prediction we apply the associated threshold returned by the built-in function.
 ```{r}
@@ -535,23 +536,21 @@ table(lda.fit.train.pred.class, training.set$stroke)
 
 qda.fit.train.pred.class <- as.numeric(qda.fit.train.pred>= recall_thresholds[4])
 table(qda.fit.train.pred.class, training.set$stroke)
-
-qda.inter.fit.train.pred.class  <- as.numeric(qda.inter.fit.train.pred >= recall_thresholds[5])
-table(qda.inter.fit.train.pred.class, training.set$stroke)
 ```
-From the above result we can see a clear example of impact of the designed thresholds in the results of the models. We can see that from the first two confusion matrices the difference between applying the ROC curve and the Precision-Recall threshold.
+From the above result we can see a clear example of impact of the designed thresholds in the results of the models. We can see from the first two confusion matrices the difference between applying the ROC curve and the Precision-Recall threshold.
 The former tries to minimize the false positive errors by considering just the positive results, instead the latter one, as wee see from the output matrix, takes in consideration also the false negative cases. Therefore it results to minimize more the false negative rate, by allowing more errors for false positive values.  
-As mentioned before in clinical cases an error committed to diagnose a disease can be very dangerous, especially for prediction problem, when instead of predicting a stroke we classify them as harmless case.  
+As mentioned before in clinical cases an error committed to diagnose a disease can be very dangerous, for example when instead of predicting a stroke we classify it as a harmless case.  
 For this reason, from now onwards, we will consider only the Recall-Precision values since we want to minimize those cases (FN) and overcome the unbalance issue.
 
-From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values for each scenario, in particular we define the optimum choice which minimize more both values but by giving more weight to false negative. 
+From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values of each fitting, in particular we define the optimum choice which minimize more both values but by giving more importance to false negative minimization. 
 
+### 4.3.2 Model validation
+A final assessment has to be done by seeing the performance of our elective models on a set of data where they have not been trained on, for this reason we will use the validation set that we defined previously. 
+In this manner we are able to simulate a real scenario case, detect some possible overfitting issues, and by comparing the performance of each model on this set we can finalize our choice.  
+In this phase the evaluation is again made by applying a threshold on the predictions, in particular we will use the Precision-Recall thresholds that we calculated in the training phase and see if the given results are compliant to what we obtained on the training set.
 
-## 4.3 Validation Set
-
-Models on validation
 ```{r}
-mod.red.val <- predict(mod.red.train, val.set, type="response")
+  mod.red.val <- predict(mod.red.train, val.set, type="response")
 mod.red.val.class <- as.numeric(mod.red.val >= recall_thresholds[1])
 table(mod.red.val.class, val.set$stroke)
 
@@ -569,16 +568,12 @@ qda.val <- qda.val$posterior[, 2]
 qda.val.class <- as.numeric(qda.val >= recall_thresholds[4])
 table(qda.val.class, val.set$stroke)
 
-qda.inter.val <- predict(qda.inter.fit.train, val.set)
-qda.inter.val <- qda.inter.val$posterior[, 2]
-qda.inter.val.class <- as.numeric(qda.inter.val >= recall_thresholds[5])
-table(qda.inter.val.class, val.set$stroke)
-
 ```
 
-The interaction qda, which has the same variable of the logistic interaction model,
-improved a lot the result in the training set, but in the validation test 
-it does perform the same as the previous qda
+As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates.  
+\textcolor{red}{We can also see that some models resulted to make more errors than expected highlighting in this way some overfitting issue.}  
+In particular wee from the above results that the outperforming model is _____.
+
 
 # 5 Conclusions and Further Analysis
 
