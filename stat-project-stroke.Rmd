@@ -431,10 +431,10 @@ val.set <- val.set[shuffle, ]
 
 ## 4.2 ROC and PRECISION-RECALL Curves
 Due to the high unbalance stroke rate defining the appropriate threshold on the predicted variable helps to overcome this issue and improves the results of the model. Note that all the models used until now give a probability output for each class, hence we will analyze the thresholds based on those output.  
-Since we are dealing with a clinical problem the presence of false negative (FN) cases is more critical than having false positive (FP) ones, for this reason we considered not just the ROC curve but also the Recall-Precision curve for each model.
+Since we are dealing with a clinical problem the presence of false negative (FN) cases is more critical than having false positive (FP) ones, for this reason we considered not just the ROC curve but also the Recall-Precision curve for each model, where the Recall function is defined as $Recall = \frac{TP}{TP + FN}$. Instead the precision as $Prec= \frac{TP}{TP + FP}$
 
 In order to make all these analyses we built a function that takes a list of model predictions, for each of them we evaluate the ROC and the Precision-Recall curves and we retrieve the best threshold of both curves in a data frame table, furthermore plot of the curves are also shown.  
-The best threshold for ROC curves corresponds to the value that maximize more the true positive rate and minimize the false positive rate. Instead for the Precision-Recall curve case we look for the value that minimize more the false negative rate (high recall value) and maximize also the precision, therefore we recover the best value by calculating the minimum value obtained by summing the recall and precision pairs.
+The best threshold for ROC curves corresponds to the value that maximize more the true positive rate and minimize the false positive rate. Instead for the Precision-Recall curve case we would like first to minimize the false negative rate (high recall value) and then try to maximize the precision, therefore we in order to have a general optimal rule for satisfying both objectives we retrieve the maximum value obtained by summing the recall and precision pairs.
 ```{r}
 library(pROC)
 library(ROCR)
@@ -453,7 +453,6 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
       plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
     }
     best.roc  <- coords(roc.res, "best")
-    ###
     
     ### PREC-REC
     pred.rec = prediction(pred, true_value)
@@ -463,8 +462,9 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
     }
     pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
                              precision=perf@y.values[[1]])
-    pr_cutoffs <- pr_cutoffs[pr_cutoffs$recall>0.9 & pr_cutoffs$recall<=0.96, ]
-    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
+    pr_cutoffs <- pr_cutoffs[pr_cutoffs$recall>0 &  pr_cutoffs$precision >0, ]
+    #Maximize Recall + Precision
+    best_recall <- pr_cutoffs[which.max(pr_cutoffs$recall + pr_cutoffs$precision), ]
     
     result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
                                   best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
@@ -547,10 +547,12 @@ qda.fit.train.pred.class <- as.numeric(qda.fit.train.pred>= recall_thresholds[4]
 table(training.set$stroke, qda.fit.train.pred.class, dnn=c('ground thruth','QDA 
             predicted'))
 ```
-From the above result we can see a clear example of impact of the designed thresholds in the results of the models. We can see from the first two confusion matrices the difference between applying the ROC curve and the Precision-Recall threshold.
-The former tries to minimize the false positive errors by considering just the positive results, instead the latter one, as we see from the output matrix, takes in consideration also the false negative cases. Therefore it results to minimize more the false negative rate, by allowing more errors for false positive values.  
-As mentioned before in clinical cases an error committed to diagnose a disease can be very dangerous, for example when instead of predicting a stroke we classify it as a harmless case.  
-For this reason, from now onwards, we will consider only the Recall-Precision values since we want to minimizes those cases (FN) and overcome the unbalance issue.
+From the above result we can see a clear difference and effectiveness of the designed thresholds. We can see by looking at the confusion matrices of the first two example of models where we applied both metrics.
+The Roc threshold tries to minimize the false positive errors by considering just the positive results, instead the other one, as we see from the output matrix, takes in consideration also the false negative cases. Therefore it results to minimize more the false negative rate, by allowing more errors for false positive values as counter-effect.
+
+For our dataset by using the latter approach we have to highlight that the number of FP has increased a lot, which could also be problem, hence a good rates among these two flase rate could be retrieved depending on our desired result.    
+But as previously mentioned, in clinical cases an error committed to diagnose a disease can be very dangerous, for example when instead of predicting a stroke we classify it as a harmless case.
+For this reason, from now onwards, we will consider only the Recall-Precision optimal threshold since it takes in consideration the False negative cases.
 
 From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values of each fitting, in particular we define the optimum choice which minimize more both values but by giving more importance to false negative minimization. 
 

@@ -65,7 +65,7 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
     pr_cutoffs <- data.frame(cutrecall=perf@alpha.values[[1]], recall=perf@x.values[[1]], 
                              precision=perf@y.values[[1]])
     pr_cutoffs <- pr_cutoffs[pr_cutoffs$recall>0 &  pr_cutoffs$precision >0, ]
-    best_recall <- pr_cutoffs[which.min(pr_cutoffs$recall + pr_cutoffs$precision), ]
+    best_recall <- pr_cutoffs[which.max(pr_cutoffs$recall + pr_cutoffs$precision), ]
     
     result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
                                   best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
@@ -375,49 +375,54 @@ roc_thresholds = res$Thr.ROC
 
 
 #################### RECALL prediction for all models
-mod.red.train.pred.class = as.numeric(mod.red.train.pred >= roc_thresholds[1])
-table(mod.red.train.pred.class,training.set$stroke)
-mod.red.train.pred.class = as.numeric(mod.red.train.pred >= recall_thresholds[1])
-table(mod.red.train.pred.class, training.set$stroke)
+mod.red.train.pred.class <- as.numeric(mod.red.train.pred >= roc_thresholds[1])
+table(training.set$stroke,mod.red.train.pred.class, dnn=c('ground thruth','reduced model 
+            predicted'))
 
-#mod1.train.pred.class = as.numeric(mod1.train.pred >= roc_thresholds[2])
-#table(mod1.train.pred.class,training.set$stroke)
-mod1.train.pred.class = as.numeric(mod1.train.pred >= recall_thresholds[2])
-table(mod1.train.pred.class, training.set$stroke)
+mod.red.train.pred.class <- as.numeric(mod.red.train.pred >= recall_thresholds[1])
+table(training.set$stroke, mod.red.train.pred.class, dnn=c('ground thruth','reduced model
+            predicted'))
 
-#lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= roc_thresholds[3])
-#table(lda.fit.train.pred.class,training.set$stroke)
-lda.fit.train.pred.class = as.numeric(lda.fit.train.pred  >= recall_thresholds[3])
-table(mod.red.train.pred.class, training.set$stroke, dnn=c('ground thruth','pred'))
+mod1.train.pred.class <- as.numeric(mod1.train.pred >= roc_thresholds[2])
+table(training.set$stroke, mod1.train.pred.class, dnn=c('ground thruth','mod1 
+            predicted'))
 
-#qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= roc_thresholds[4])
-#table(qda.fit.train.pred.class,training.set$stroke)
-qda.fit.train.pred.class = as.numeric(qda.fit.train.pred  >= recall_thresholds[4])
-table(qda.fit.train.pred.class, training.set$stroke)
+mod1.train.pred.class <- as.numeric(mod1.train.pred >= recall_thresholds[2])
+table(training.set$stroke, mod1.train.pred.class, dnn=c('ground thruth','mod1 
+            predicted'))
 
-qda.inter.fit.train.pred.class = as.numeric(qda.inter.fit.train.pred  >= recall_thresholds[5])
-table(qda.inter.fit.train.pred.class, training.set$stroke)
+lda.fit.train.pred.class <- as.numeric(lda.fit.train.pred>=recall_thresholds[3])
+table(training.set$stroke, lda.fit.train.pred.class, dnn=c('ground thruth','LDA 
+            predicted'))
+
+qda.fit.train.pred.class <- as.numeric(qda.fit.train.pred>= recall_thresholds[4])
+table(training.set$stroke, qda.fit.train.pred.class, dnn=c('ground thruth','QDA 
+            predicted'))
 
 ####VALIDATION ORA FUNZIONA OTTIMAMENTE PER MOD.RED E MOD1
 ####C'e da fare per lda e qda
 
 mod.red.val <- predict(mod.red.train, val.set, type="response")
-mod.red.val.class = as.numeric(mod.red.val >= recall_thresholds[1])
-table(mod.red.val.class, val.set$stroke)
+mod.red.val.class <- as.numeric(mod.red.val >= recall_thresholds[1])
+table(val.set$stroke, mod.red.val.class,  dnn=c('ground thruth','reduced model 
+            predicted'))
 
 mod1.val <- predict(mod1.train, val.set, type="response")
-mod1.val.class = as.numeric(mod1.val >= recall_thresholds[2])
-table(mod1.val.class, val.set$stroke)
+mod1.val.class <- as.numeric(mod1.val >= recall_thresholds[2])
+table(val.set$stroke, mod1.val.class, dnn=c('ground thruth','interact model 
+            predicted'))
 
 lda.val <- predict(lda.fit.train, val.set)
 lda.val <- lda.val$posterior[, 2]
 lda.val.class = as.numeric(lda.val >= recall_thresholds[3])
-table(lda.val.class, val.set$stroke)
+table(val.set$stroke, lda.val.class, dnn=c('ground thruth','LDA 
+            predicted'))
 
 qda.val <- predict(qda.fit.train, val.set)
 qda.val <- qda.val$posterior[, 2]
-qda.val.class = as.numeric(qda.val >= recall_thresholds[4])
-table(qda.val.class, val.set$stroke)
+qda.val.class <- as.numeric(qda.val >= recall_thresholds[4])
+table(val.set$stroke, qda.val.class, dnn=c('ground thruth','QDA 
+            predicted'))
 
 # The interaction qda, which has the same variable of the logistic interaction model,
 # improved a lot the result in the training set, but in the validation test 
