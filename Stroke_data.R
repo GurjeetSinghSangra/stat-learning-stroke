@@ -44,7 +44,10 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
   result <- data.frame(Thr.ROC=double(), Specificity=double(), Sensitivity=double(),
                        Thr.Prec.Rec=double(), Recall=double(), Precision=double())
   n_models = length(pred_models)
-  par(mfrow=c(n_models, 2))
+  if (yes_plot==TRUE) {
+    png(filename="./curves.png")
+    par(mfrow=c(n_models, 2))
+  }
   for (pred in pred_models) {
     ### ROC
     roc.res <- roc(true_value, pred, levels=c("0", "1"))
@@ -52,7 +55,6 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
       plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
     }
     best.roc  <- coords(roc.res, "best")
-    ###
     
     ### PREC-REC
     pred.rec = prediction(pred, true_value)
@@ -67,6 +69,9 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
     
     result[nrow(result) + 1,] = c(best.roc[1, 1], best.roc[1, 2], best.roc[1, 3], 
                                   best_recall[1, 1], best_recall[1, 2], best_recall[1, 3])
+  }
+  if(yes_plot==TRUE){
+    dev.off()
   }
   par(mfrow=c(1, 1))
   return(result)
