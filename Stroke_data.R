@@ -183,7 +183,7 @@ print(stroke_data[c("246","183","119"), ])
 ###################
 
 #anova computation.
-anova(mod.full, mod.red, test="Chisq")
+anova(mod.red, mod.full, test="Chisq")
 # As expected from the anova test REJECTS that the complex model is more
 # significant than the reduced one, since the p-value is not less than 5%.
 # Hence the full model does not help with our prediction.
