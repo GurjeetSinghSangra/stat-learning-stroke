@@ -134,7 +134,7 @@ pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 ```
 
 The pairs-plot shows that the stronger relationships involve quite often the variable `age`. There are also other relevant relations, for example between `work_type` and `ever_married` or `bmi` with `working_status`.
-In addition, we can see strong collinearity among the dummy variables `age`, `work_type`, and `ever_married`, this mean that they are closely related to one another. For this reason we get uncertainty in the coefficient estimates and so we do not consider them in the fitting of the models.  
+In addition, we can see strong collinearity among the variables `age`, `work_type`, and `ever_married`, this mean that they are closely related to one another. For this reason we get uncertainty in the coefficient estimates and so we do not consider them in the fitting of the models.  
 We go on looking at some intuitive relationship of `stroke` with `age`,`bmi` and `avg_glucose_level`:
 ```{r bp_stroke, fig.height=3.5, fig.width=6.5, fig.cap='\\label{bp_stroke}Visual rappresentation of the comparison between `stroke`(1) and not-`stroke`(0) of the features: `avg_glucose_level`, `bmi` and  `age`'}
 par(mfrow=c(1,3))
@@ -152,7 +152,7 @@ table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])
 table(stroke.35.50 <- stroke_data[stroke_data$age>=35 & stroke_data$age<50 , 'stroke'])
 table(stroke.major.50 <- stroke_data[stroke_data$age>=50 , 'stroke'])
 ```
-In `stroke.less.35` we can notice that there are only two person under the age of 35 which is suffered a stroke illness, while in `stroke.35.50` we highlight the number of people between the age of 35 and 50 that are ill, i.e. 16. The major difference between the numbers can be seen in `stroke.major.50` where stroke patients older than 50 are much more than the one of the previous cases, so we can conclude that an increment on the age strongly contribute on the probability to get a stroke.  
+In `stroke.less.35` we can notice that there are only two people under the age of 35 which is suffered a stroke illness, while in `stroke.35.50` we highlight the number of people between the age of 35 and 50 that are ill, i.e. 16. The major difference between the numbers can be seen in `stroke.major.50` where stroke patients older than 50 are much more than the one of the previous cases, so we can conclude that an increment on the age strongly contribute on the probability to get a stroke.  
 If we sum to `age` the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. On the other hand, there is no apparent relation of `stroke` with `bmi`.
 
 We now highlight other visual relationship between the variables used before:
@@ -189,8 +189,12 @@ In order to explore different approaches for predicting the qualitative response
 
 Logistic regression can be defined as a type of generalized linear model (GLM). In particular, it is a statistical model used to examine the association of categorical or continuous independent variables with one dichotomous dependent variable.  
 Rather than computing directly the response $Y$, logistic regression computes the probability that $Y$ belongs to a particular category, in our case $1$ if the person has a stroke disease, $0$ otherwise.  
-In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. We will apply the Akaike Information Criterion (AIC) as selection of the candidate models (given directly from the `summary` function).  
-We decide to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression.
+In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. 
+In particular, our model selection will be guide both from the p-values and probabilistic statistical measure that attempts to quantify both the model performance on the training dataset and the complexity of the model. An example of this last strategy is given by the Akaike Information Criterion (AIC).  
+Compared with the BIC method, the AIC statistic penalizes complex model less, meaning that it may put more emphasis on model performance on the training dataset, and, in turn, select more complex models. Its description is given by the following formula 
+$$ AIC = \frac{1}{n \hat\sigma^2}(RSS+2 d \hat \sigma^2),$$
+where $n$ is the number of samples, $d$ is the number of predictors, $\hat \sigma^2$ is an estimate of the variance of the error associated with each response measurement and $RSS$ is the residual sum of square.  
+We decided to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression but not so good with the generalized linear models (GLM).
 
 
 
@@ -224,15 +228,14 @@ summary(mod.red1)
 ```
 
 Also in this case the significant covariates are the same of the ones found in the full model.  
-In this step we remove the `gender` variable:
+In this step we remove the `gender` variable, because it is not significant and we end up with more or less the same results as before.
 ```{r}
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
                   smoking_status  + heart_disease, family=binomial) 
-summary(mod.red2)
 ```
 
-The parameters left to eliminate are `bmi` and `smoking_status`.  
-We are now able to define the final reduced model:
+The parameters left to remove are `bmi` and `smoking_status` that continue to have a high p-value.
+Now, we are able to define the final reduced model:
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|$$
 with four explanatory variables.
 ```{r}
@@ -279,7 +282,7 @@ kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc',
 ```
 
 If we compare the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lower of the two.  
-To have a confirmation of this concept, we use 'anova', a function which compares them and returns the best:
+To have a confirmation of this concept, we use 'anova', a function which compares them and returns the best. The null hypothesis is that the two models fit the data equally well, and the alternative hypothesis is that the reduced model is superior.  
 ```{r}
 anova(mod.full, mod.red, test="Chisq")
 ```
@@ -477,11 +480,13 @@ We first fit all the elective models on our training set.
 ```{r}
 attach(training.set)
 # Logistic reduced model
-mod.red.train <- glm(stroke ~ age + heart_disease + avg_glucose_level +                            hypertension, data=training.set, family = binomial)
+mod.red.train <- glm(stroke ~ age + heart_disease + avg_glucose_level +
+                       hypertension, data=training.set, family = binomial)
 mod.red.train.pred <- predict(mod.red.train, data=training.set, type="response")
 
 # Logistic interaction model
-mod1.train <- glm(stroke ~ age + avg_glucose_level+ heart_disease + hypertension               + age*heart_disease, data=training.set, family=binomial)
+mod1.train <- glm(stroke ~ age + avg_glucose_level+ heart_disease + hypertension 
+                  + age*heart_disease, data=training.set, family=binomial)
 mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
 
 # LDA Model
