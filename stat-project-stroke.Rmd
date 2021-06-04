@@ -14,7 +14,7 @@ output:
 ---
 # 1 Introduction
 
-In the following report, we present an analysis computed on stroke disease, and we try to explain from statistical analysis some correlation factors and statistics of the given features/predictors by designing models to predict the presence of stroke disease. In addition, we highlight possible linear and non-linear relationships among the given features (predictors) and the stroke disease variable (predicted variable).  
+In the following report, we present an analysis computed on stroke disease, and we try to explain from statistical analysis some correlation factors and statistics of the given features by designing models to predict the presence of stroke disease. In addition, we highlight possible linear and non-linear relationships among the given features (predictors) and the stroke disease variable (predicted variable).  
 "Stroke" is the medical term for damage to brain tissue or the death of a portion of it, due to insufficient blood supply to an area of the brain.  According to the World Health Organization (WHO) stroke is the 2nd leading cause of death globally, responsible for approximately 11% of total deaths and our aim is to see if and how the variables we are dealing with are related, in order to predict which individual is more probable to have a stroke.  
 The symptoms of stroke vary from patient to patient, depending on the severity of the condition, the affected brain area, causes, type of stroke, etc. Stroke is characterized by sudden onset and for this reason it involves the need for immediate therapeutic intervention and adapted to the needs of the patient. In this sense, looking for relation between features may help to prevent or assess it.
 
@@ -104,7 +104,6 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...){
   if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
   text(0.5, 0.5, txt, cex = cex.cor * r)
 }
-
 panel.hist <- function(x, ...)
 {
   usr <- par("usr"); on.exit(par(usr))
@@ -114,7 +113,6 @@ panel.hist <- function(x, ...)
   y <- h$counts; y <- y/max(y)
   rect(breaks[-nB], 0, breaks[-1], y, col = "green", ...)
 }
-
 box_plot_categories <- function(data, y){
   n_features = length(data)
   grid = round(sqrt(n_features))
@@ -133,9 +131,9 @@ And here we show the results from the pairs plot:
 pairs(stroke_data, diag.panel=panel.hist, upper.panel=panel.cor)
 ```
 
-The pairs-plot shows that the stronger relationships involve quite often the variable `age`. There are also other relevant relations, for example between `work_type` and `ever_married` or `bmi` with `working_status`.
-In addition, we can see strong collinearity among the variables `age`, `work_type`, and `ever_married`, this mean that they are closely related to one another. For this reason we get uncertainty in the coefficient estimates and so we do not consider them in the fitting of the models.  
-We go on looking at some intuitive relationship of `stroke` with `age`,`bmi` and `avg_glucose_level`:
+The pairs-plot shows that the stronger relationships involve quite often the variable `age`. But there are other small relevant relations, for example between `work_type` and `ever_married` or between `bmi` and `work_type`.
+In addition, we can see strong collinearity among the variables `age`, `work_type`, and `ever_married`, this means that they are closely related to one another. For this reason we get uncertainty in the coefficient estimates and so we do not consider them in the fitting of the models.  
+We go on looking at some intuitive relationship of `stroke` with `age`, `bmi` and `avg_glucose_level`:
 ```{r bp_stroke, fig.height=3.5, fig.width=6.5, fig.cap='\\label{bp_stroke}Visual rappresentation of the comparison between `stroke`(1) and not-`stroke`(0) of the features: `avg_glucose_level`, `bmi` and  `age`'}
 par(mfrow=c(1,3))
 boxplot(avg_glucose_level~stroke, xlab= 'stroke', 
@@ -152,7 +150,7 @@ table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])
 table(stroke.35.50 <- stroke_data[stroke_data$age>=35 & stroke_data$age<50 , 'stroke'])
 table(stroke.major.50 <- stroke_data[stroke_data$age>=50 , 'stroke'])
 ```
-In `stroke.less.35` we can notice that there are only two people under the age of 35 which is suffered a stroke illness, while in `stroke.35.50` we highlight the number of people between the age of 35 and 50 that are ill, i.e. 16. The major difference between the numbers can be seen in `stroke.major.50` where stroke patients older than 50 are much more than the one of the previous cases, so we can conclude that an increment on the age strongly contribute on the probability to get a stroke.  
+In `stroke.less.35` we can notice that there are only two people under the age of 35 which is suffered a stroke illness, while in `stroke.35.50` we highlight the number of people between the age of 35 and 50 that are ill, i.e. 16. The major difference between the numbers can be seen in `stroke.major.50` where stroke patients older than 50 are much more than the one of the previous cases, **(so we can conclude that an increment on the age strongly contribute on the probability to get a stroke.) ###aspetterei a dirlo questo, lo mettiamo alla fine** 
 If we sum to `age` the information about `avg_glucose_level` we may wonder if diabetic people are more probable to get a stroke or not. On the other hand, there is no apparent relation of `stroke` with `bmi`.
 
 We now highlight other visual relationship between the variables used before:
@@ -192,9 +190,9 @@ Rather than computing directly the response $Y$, logistic regression computes th
 In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. 
 In particular, our model selection will be guide both from the p-values and probabilistic statistical measure that attempts to quantify both the model performance on the training dataset and the complexity of the model. An example of this last strategy is given by the Akaike Information Criterion (AIC).  
 Compared with the BIC method, the AIC statistic penalizes complex model less, meaning that it may put more emphasis on model performance on the training dataset, and, in turn, select more complex models. Its description is given by the following formula 
-$$ AIC = \frac{1}{n \hat\sigma^2}(RSS+2 d \hat \sigma^2),$$
-where $n$ is the number of samples, $d$ is the number of predictors, $\hat \sigma^2$ is an estimate of the variance of the error associated with each response measurement and $RSS$ is the residual sum of square.  
-We decided to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression but not so good with the generalized linear models (GLM).
+$$ AIC = -2 \cdot \ell(\hat \Theta ) + 2d,$$
+where $\ell(\hat \Theta )$ is the maximized value of the log-likelihood function for the estimated model and $d$ the number of predictors.
+We decided to exclude the Mallow's Cp and the R^2 adjusted techniques because they work efficiently in the case of linear regression.
 
 
 
@@ -227,14 +225,14 @@ mod.red1 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension +
 summary(mod.red1)
 ```
 
-Also in this case the significant covariates are the same of the ones found in the full model.  
+Also in this case the more important covariates are the same of the ones found in the full model.  
 In this step we remove the `gender` variable, because it is not significant and we end up with more or less the same results as before.
 ```{r}
 mod.red2 <- glm(stroke ~ age + bmi + avg_glucose_level + hypertension + 
                   smoking_status  + heart_disease, family=binomial) 
 ```
 
-The parameters left to remove are `bmi` and `smoking_status` that continue to have a high p-value.
+The parameters left to delete are `bmi` and `smoking_status` that continue to have a high p-value.
 Now, we are able to define the final reduced model:
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|$$
 with four explanatory variables.
@@ -281,11 +279,12 @@ kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc',
                     'work_type','res_type','glucose', 'bmi','smoking','stroke'))
 ```
 
-If we compare the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lower of the two.  
-To have a confirmation of this concept, we use 'anova', a function which compares them and returns the best. The null hypothesis is that the two models fit the data equally well, and the alternative hypothesis is that the reduced model is superior.  
+If we liken the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lower of the two.  
+To have a confirmation of this concept, we use 'anova', a function which allows us to provide a comparison. The null hypothesis is that the two models fit the data equally well, and the alternative hypothesis is that the reduced model is superior.  
 ```{r}
-anova(mod.full, mod.red, test="Chisq")
+anova(mod.red, mod.full, test="Chisq")
 ```
+As we know, the 'anova' table gives us the deviance difference, the degrees of freedom and above all the statistical test.
 As expected, the anova test rejects that the full model is more pertinent than the reduced one, since the p-value of its features are not less than $5\%$ or even $10\%$. Therefore the full model does not enhance the prediction.
 
 ### 3.1.2 Interaction Models
@@ -314,7 +313,7 @@ mod3 <- glm(stroke~age + avg_glucose_level + heart_disease+hypertension +
 summary(mod3)
 ```
 
-After that, we picked up the reduced model without `heart_disease` which represents the explanatory feature with higher p-value and we continue to work in the same way we have just seen. We repeated the scheme with `age`, without earning benefits.  
+After that, we picked up the reduced model without `heart_disease` which represents the explanatory feature with higher p-value and we continued to work in the same way we have just seen. We repeated the scheme with `age`, without earning benefits.  
 The AIC has a value of 1386.2.
 ```{r, results='hide'}
 mod4 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
@@ -344,7 +343,7 @@ kable(stroke_data[c("207","150","100"), ], format = 'simple', align='cccccccc',
                     'work_type','res_type','glucose', 'bmi','smoking','stroke'))
 ```
 
-and other properties and characteristics:
+and other properties and characteristics by the plots:
 ```{r}
 par(mfrow=c(2,2))
 plot(mod.full)
