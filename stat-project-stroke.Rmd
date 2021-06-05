@@ -524,15 +524,15 @@ roc_thresholds = res$Thr.ROC
 Once fitting the models, we would like to see their performance in the training set in order to have a first evaluation, hence for each prediction we apply the associated threshold returned by the built-in function.
 ```{r}
 mod.red.train.pred.class <- as.numeric(mod.red.train.pred >= roc_thresholds[1])
-table(training.set$stroke,mod.red.train.pred.class, dnn=c('ground thruth','reduced model 
+table(training.set$stroke,mod.red.train.pred.class, dnn=c('Ground thruth','Reduced model 
             predicted'))
 
 mod.red.train.pred.class <- as.numeric(mod.red.train.pred >= recall_thresholds[1])
-table(training.set$stroke, mod.red.train.pred.class, dnn=c('ground thruth','reduced model
+table(training.set$stroke, mod.red.train.pred.class, dnn=c('Ground thruth','Reduced model
             predicted'))
 
 mod1.train.pred.class <- as.numeric(mod1.train.pred >= roc_thresholds[2])
-table(training.set$stroke, mod1.train.pred.class, dnn=c('ground thruth','mod1 
+table(training.set$stroke, mod1.train.pred.class, dnn=c('Ground thruth','Mod1 
             predicted'))
 
 mod1.train.pred.class <- as.numeric(mod1.train.pred >= recall_thresholds[2])
@@ -585,12 +585,10 @@ table(val.set$stroke, qda.val.class, dnn=c('ground thruth','QDA
             predicted'))
 
 ```
-**commento al threshold, hyper-parameter**: provando più volte con la run abbiamo visto che mod1 minimizza meglio i FN
 
 As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates.  
-\textcolor{red}{We can also see that some models resulted to make more errors than expected highlighting in this way some overfitting issue.}  
-In particular, we can see from the above results that the outperforming model is _____.
-
+By running several times we saw that on average the reduced model (mod1) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insight of the predictors, as we saw in chapter 3.1.  
+We also saw that the QDA model shows better results than LDA, since it exploits the heteroscedasticity among stroke classes.
 
 # 5 Conclusions and Further Analysis
 
