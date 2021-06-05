@@ -430,7 +430,7 @@ table(val.set$stroke, qda.val.class, dnn=c('ground thruth','QDA
 qda.inter.val <- predict(qda.inter.fit.train, val.set)
 qda.inter.val <- qda.inter.val$posterior[, 2]
 qda.inter.val.class = as.numeric(qda.inter.val >= recall_thresholds[5])
-table(qda.inter.val.class, val.set$stroke)
+table(val.set$stroke, qda.inter.val.class)
 
 
 ###########################################################################
