@@ -493,7 +493,7 @@ mod1.train <- glm(stroke ~ age + avg_glucose_level+ heart_disease + hypertension
                   + age*heart_disease, data=training.set, family=binomial)
 mod1.train.pred <- predict(mod1.train, data=training.set, type="response")
 
-# LDA Model
+# LDA model
 lda.fit.train <- lda(stroke ~ age + bmi + avg_glucose_level + hypertension + 
                        smoking_status + Residence_type + heart_disease, 
                        data=training.set)
@@ -532,19 +532,19 @@ table(training.set$stroke, mod.red.train.pred.class, dnn=c('Ground thruth','Redu
             predicted'))
 
 mod1.train.pred.class <- as.numeric(mod1.train.pred >= roc_thresholds[2])
-table(training.set$stroke, mod1.train.pred.class, dnn=c('Ground thruth','Mod1 
+table(training.set$stroke, mod1.train.pred.class, dnn=c('Ground thruth','Interaction model 
             predicted'))
 
 mod1.train.pred.class <- as.numeric(mod1.train.pred >= recall_thresholds[2])
-table(training.set$stroke, mod1.train.pred.class, dnn=c('ground thruth','mod1 
+table(training.set$stroke, mod1.train.pred.class, dnn=c('Ground thruth','Interaction model
             predicted'))
 
 lda.fit.train.pred.class <- as.numeric(lda.fit.train.pred>=recall_thresholds[3])
-table(training.set$stroke, lda.fit.train.pred.class, dnn=c('ground thruth','LDA 
+table(training.set$stroke, lda.fit.train.pred.class, dnn=c('Ground thruth','LDA model
             predicted'))
 
 qda.fit.train.pred.class <- as.numeric(qda.fit.train.pred>= recall_thresholds[4])
-table(training.set$stroke, qda.fit.train.pred.class, dnn=c('ground thruth','QDA 
+table(training.set$stroke, qda.fit.train.pred.class, dnn=c('Ground thruth','QDA model
             predicted'))
 ```
 From the confusion matrices of the first two example of models we can see a clear difference and effectiveness of the two designed thresholds.  
@@ -555,40 +555,66 @@ For our dataset by using the latter approach we have to highlight that the numbe
 But as previously mentioned, in clinical cases an error committed to diagnose a disease can be very dangerous, for example when instead of predicting a stroke we classify it as a harmless case.
 For this reason, from now onwards, we will consider only the Recall-Precision optimal threshold since it takes in consideration the False negative cases.
 
-From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values of each fitting, in particular we define the optimum choice which minimize more both values but by giving more importance to false negative minimization. 
+From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values of each fitting, in particular we define the optimum choice which minimize more both values but by giving more importance to false negative minimization.
 
 ### 4.3.2 Model validation
 A final assessment has to be done by seeing the performance of our elective models on a set of data where they have not been trained on, for this reason we will use the validation set that we defined previously. 
 In this manner we are able to simulate a real scenario case, detect some possible overfitting issues, and by comparing the performance of each model on this set we can finalize our choice.  
-In this phase the evaluation is again made by applying a threshold on the predictions, in particular we will use the Precision-Recall thresholds that we calculated in the training phase and see if the given results are compliant to what we obtained on the training set.
-
+In this phase the evaluation is again made by applying a threshold on the predictions, in particular we will use the Precision-Recall thresholds that we calculated in the training phase and see if the given results are compliant to what we obtained on the training set. Moreover, we will calculate the positive and negative error rates, which represent the misclassification error on the prediction of having, or not, a stroke.
 ```{r}
+# Logistic reduced model
 mod.red.val <- predict(mod.red.train, val.set, type="response")
 mod.red.val.class <- as.numeric(mod.red.val >= recall_thresholds[1])
-table(val.set$stroke, mod.red.val.class,  dnn=c('ground thruth','reduced model 
+conf.matr <- table(val.set$stroke, mod.red.val.class,  dnn=c('Ground thruth','reduced model 
             predicted'))
+print(conf.matr)
+```
 
+```{r, echo=FALSE}
+sprintf("Positive error rate is : %f", conf.matr[2,2] / (conf.matr[1,2] + conf.matr[2,2]))
+sprintf("Negative error rate is : %f", conf.matr[2,1] / (conf.matr[1,1] + conf.matr[2,1]))
+```
+```{r}
+# Logistic interaction model
 mod1.val <- predict(mod1.train, val.set, type="response")
 mod1.val.class <- as.numeric(mod1.val >= recall_thresholds[2])
-table(val.set$stroke, mod1.val.class, dnn=c('ground thruth','interact model 
+conf.matr <- table(val.set$stroke, mod1.val.class,  dnn=c('Ground thruth','interaction model 
             predicted'))
-
+print(conf.matr)
+```
+```{r, echo=FALSE}
+sprintf("Positive error rate is : %f", conf.matr[2,2] / (conf.matr[1,2] + conf.matr[2,2]))
+sprintf("Negative error rate is : %f", conf.matr[2,1] / (conf.matr[1,1] + conf.matr[2,1]))
+```
+```{r}
+# LDA model
 lda.val <- predict(lda.fit.train, val.set)
 lda.val <- lda.val$posterior[, 2]
 lda.val.class = as.numeric(lda.val >= recall_thresholds[3])
-table(val.set$stroke, lda.val.class, dnn=c('ground thruth','LDA 
+conf.matr <- table(val.set$stroke, lda.val.class,  dnn=c('Ground thruth','LDA model
             predicted'))
-
+print(conf.matr)
+```
+```{r, echo=FALSE}
+sprintf("Positive error rate is : %f", conf.matr[2,2] / (conf.matr[1,2] + conf.matr[2,2]))
+sprintf("Negative error rate is : %f", conf.matr[2,1] / (conf.matr[1,1] + conf.matr[2,1]))
+```
+```{r}
+# QDA model
 qda.val <- predict(qda.fit.train, val.set)
 qda.val <- qda.val$posterior[, 2]
 qda.val.class <- as.numeric(qda.val >= recall_thresholds[4])
-table(val.set$stroke, qda.val.class, dnn=c('ground thruth','QDA 
+conf.matr <- table(val.set$stroke, qda.val.class,  dnn=c('Ground thruth','QDA model
             predicted'))
-
+print(conf.matr)
+```
+```{r, echo=FALSE}
+sprintf("Positive error rate is : %f", conf.matr[2,2] / (conf.matr[1,2] + conf.matr[2,2]))
+sprintf("Negative error rate is : %f", conf.matr[2,1] / (conf.matr[1,1] + conf.matr[2,1]))
 ```
 
-As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates.  
-By running several times we saw that on average the reduced model (`mod1`) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insight of the predictors, as we saw in chapter 3.1.  
+As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates. The ratio of the misclassified non-stroke person is almost zero in all models, so we do almost not make mistake when saying to a person that he/she will not get a stroke disease.  
+By running the code several times, we saw that on average the reduced model (`mod1`) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insight of the predictors, as we saw in chapter 3.1.  
 We also saw that the QDA model shows better results than LDA, since it exploits the heteroscedasticity among stroke classes.
 
 # 5 Conclusions and Further Analysis
