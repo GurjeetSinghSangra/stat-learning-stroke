@@ -279,12 +279,12 @@ kable(stroke_data[c("119","183","246"),], format = 'simple', align='cccccccc',
                     'work_type','res_type','glucose', 'bmi','smoking','stroke'))
 ```
 
-If we liken the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lower of the two.  
-To have a confirmation of this concept, we use 'anova', a function which allows us to provide a comparison. The null hypothesis is that the two models fit the data equally well, and the alternative hypothesis is that the reduced model is superior.  
+If we look at the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its AIC is the lower of the two.  
+To have a confirmation of this concept we use `anova`, a function which allows us to provide a comparison. The null hypothesis is that the two models fit the data equally well, and the alternative hypothesis is that the reduced model is superior.  
 ```{r}
 anova(mod.red, mod.full, test="Chisq")
 ```
-As we know, the 'anova' table gives us the deviance difference, the degrees of freedom and above all the statistical test.
+As we know, the `anova` table gives us the deviance difference, the degrees of freedom and above all the statistical test.
 As expected, the anova test rejects that the full model is more pertinent than the reduced one, since the p-value of its features are not less than $5\%$ or even $10\%$. Therefore the full model does not enhance the prediction.
 
 ### 3.1.2 Interaction Models
@@ -431,7 +431,7 @@ val.set <- val.set[shuffle, ]
 
 ## 4.2 ROC and PRECISION-RECALL Curves
 Due to the high unbalance stroke rate defining the appropriate threshold on the predicted variable helps to overcome this issue and improves the results of the model. Note that all the models used until now give a probability output for each class, hence we will analyze the thresholds based on those output.  
-Since we are dealing with a clinical problem the presence of false negative (FN) cases is more critical than having false positive (FP) ones, for this reason we considered not just the ROC curve but also the Recall-Precision curve for each model, where the Recall function is defined as $Recall = \frac{TP}{TP + FN}$. Instead the precision as $Prec= \frac{TP}{TP + FP}$
+Since we are dealing with a clinical problem the presence of false negative (FN) cases is more critical than having false positive (FP) ones, for this reason we considered not just the ROC curve but also the Recall-Precision curve for each model, where the Recall function is defined as $Recall = \frac{TP}{TP + FN}$. Instead the precision as $Prec= \frac{TP}{TP + FP}$.
 
 In order to make all these analyses we built a function that takes a list of model predictions, for each of them we evaluate the ROC and the Precision-Recall curves and we retrieve the best threshold of both curves in a data frame table, furthermore plot of the curves are also shown.  
 The best threshold for ROC curves corresponds to the value that maximize more the true positive rate and minimize the false positive rate. Instead for the Precision-Recall curve case we would like first to minimize the false negative rate (high recall value) and then try to maximize the precision, therefore we in order to have a general optimal rule for satisfying both objectives we retrieve the maximum value obtained by summing the recall and precision pairs.
@@ -547,8 +547,9 @@ qda.fit.train.pred.class <- as.numeric(qda.fit.train.pred>= recall_thresholds[4]
 table(training.set$stroke, qda.fit.train.pred.class, dnn=c('ground thruth','QDA 
             predicted'))
 ```
-From the above result we can see a clear difference and effectiveness of the designed thresholds. We can see by looking at the confusion matrices of the first two example of models where we applied both metrics.
-The Roc threshold tries to minimize the false positive errors by considering just the positive results, instead the other one, as we see from the output matrix, takes in consideration also the false negative cases. Therefore it results to minimize more the false negative rate, by allowing more errors for false positive values as counter-effect.
+From the confusion matrices of the first two example of models we can see a clear difference and effectiveness of the two designed thresholds.  
+The ROC threshold tries to minimize the false positive errors by considering just the positive results, instead the other one, as we see from the output matrix, takes in consideration also the false negative cases. Therefore it results to minimize more the false negative rate, by allowing more errors for false positive values as counter-effect.
+The ROC threshold tries to minimize the false positive errors by considering just the positive results, instead the other one takes in consideration also the false negative cases, as we see from the output matrix. Therefore it results to minimize more the false negative rate, by allowing more errors for false positive values as counter-effect.
 
 For our dataset by using the latter approach we have to highlight that the number of FP has increased a lot, which could also be problem, hence a good rates among these two flase rate could be retrieved depending on our desired result.    
 But as previously mentioned, in clinical cases an error committed to diagnose a disease can be very dangerous, for example when instead of predicting a stroke we classify it as a harmless case.
@@ -587,19 +588,19 @@ table(val.set$stroke, qda.val.class, dnn=c('ground thruth','QDA
 ```
 
 As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates.  
-By running several times we saw that on average the reduced model (mod1) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insight of the predictors, as we saw in chapter 3.1.  
+By running several times we saw that on average the reduced model (`mod1`) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insight of the predictors, as we saw in chapter 3.1.  
 We also saw that the QDA model shows better results than LDA, since it exploits the heteroscedasticity among stroke classes.
 
 # 5 Conclusions and Further Analysis
 
-non riusciamo a dire quale modello sia effettivamente il migliore, si suggerisce di usare altri modelli più complessi. Abbiamo evidenzianto che i predictors con maggior rilievo sono age e ?, nonostante questo è da valutare l'aggiunta di altri parametri.
+As seen in the course of our analysis there have been some problematics due to the features we were given.  
+The tests computed on our data involved various models in which we have included all or some of the variables available, also mixing them together. Unfortunately the low complexity of the model is not enough for an accurate prediction of the probability to get a stroke. In fact, by looking and the plots generated in section 2.2 -Descriptive statistic- we can see that the data are not linearly separable, though it is not so easy to manage them with a simple model. In addition, from the pair-wise plot we can see that the features are weakly correlated to each other, with the higher relation of 0.68 between `age` and `ever_married`. 
 
-Modello non linearly separable --> see scatter
+Despite all, after the training and validation phase, in which we tested the models we were taking into account, we promoted `mod1`:
+$$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb|age*heart_disease|,$$ 
 
-strong relation --> beta parameters
+as the model which garantees better performances. In particular, in the `summary(mod1)` we can see how each feature contribute on the prediction by looking at the $\beta$ parameters. The higher contribution on stroke comes from `heart_disease` with a coefficient equal to $2.765$, even though its p-value is not the smallest; the other features have all coefficient smaller than 1.  
+On the other hand, the strongest relation is always between `stroke` and `age`, older people have a higher probability to get a stroke and this disease will become an increasingly important health problem as the world's population continues to age.
 
-con i dati e le analisi fatte non abbiamo racolto abbastanza informazioni sicure per poter prevenire l'ictus --> migliorare
-
-Risposta alle domande ed eventualmente riferimenti ai plot.
-
-Consigli di aggiungere features
+Resuming the initial question, if it is possible to prevent a stroke, we can answer that with our data we cannot achieve a secure prediction, but only with a moderate confidential interval of 90% on it.  
+A good solution can be to find other features highly related to each other and also with stroke, in order to produce relevant results.
