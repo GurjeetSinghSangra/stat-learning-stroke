@@ -94,6 +94,7 @@ stroke_data$ever_married<-as.factor(stroke_data$ever_married)
 stroke_data$work_type<-as.factor(stroke_data$work_type)
 stroke_data$Residence_type<-as.factor(stroke_data$Residence_type)
 stroke_data$smoking_status<-as.factor(stroke_data$smoking_status)
+stroke_data$heart_disease<-as.factor(stroke_data$heart_disease)
 
 # modifiche a bmi
 stroke_data$bmi <- as.numeric(stroke_data$bmi)# A warning has to be shown for N/A values which has to be map in NAs values. In case this warning is not shown, update R version to 4.__
@@ -131,6 +132,9 @@ table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])#/length(strok
 table(stroke.less.50 <- stroke_data[stroke_data$age>=35 & stroke_data$age<50 , 'stroke'])
 table(stroke.major.50 <- stroke_data[stroke_data$age>=50 , 'stroke'])
 
+table(heart_disease)
+table(stroke_data[stroke_data$heart_disease==0, ]$stroke)
+table(stroke_data[stroke_data$heart_disease==1, ]$stroke)
 # Scatter plot
 ################
 ggplot(stroke_data, aes(x = avg_glucose_level, y = bmi,col = as.factor(stroke))) +
@@ -184,7 +188,7 @@ par(mfrow=c(1,1))
 # Furthermore R does not show the index of the sample with high leverage, i guess because a lot of values could change the prediction.
 # Some outliers with high variance are: idx: 183, 246, 163
 
-print(stroke_data[c("246","183","119"), ]) 
+print(stroke_data[c("246","183","119"), ])
 ###################
 
 #anova computation.

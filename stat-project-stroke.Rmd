@@ -50,6 +50,7 @@ stroke_data$ever_married <- as.factor(stroke_data$ever_married)
 stroke_data$work_type <- as.factor(stroke_data$work_type)
 stroke_data$Residence_type <- as.factor(stroke_data$Residence_type)
 stroke_data$smoking_status <- as.factor(stroke_data$smoking_status)
+stroke_data$heart_disease<-as.factor(stroke_data$heart_disease)
 ```
 
 The variable `bmi` was not numeric because of the presence of  "N/A" string values which identify missing information, hence we transformed its elements into numerical values and then removed the NA values generated.
@@ -202,7 +203,7 @@ We start with the full model to see if all the features of the dataset contribut
 Up to now we have already mentioned if some predictors seem to be more or less correlated to the response variable, and a way for analyze such relation is by introducing the null hypothesis. In the case of the full model, we are dealing with $10$ explanatory variables and so we have 
 $$H_0 : \beta_1 = \dots = \beta_{10} = 0$$
 and this means that we are making the assumption that no predictors is somehow related with `stroke`. If we reject the null hypothesis we are assuming that there is in fact a correlation and we have to find which feature is involved.  
-To decide whether or not reject $H_0$ we look at the p-values: in our case we decide to put $\alpha = 0.1$, for p-values smaller than $\alpha$ we keep the feature, otherwise we remove it from the model. \textcolor{red}{This means that we will end up with a confidence interval of $90\%$ in the classification.}  
+To decide whether or not reject $H_0$ we set the alpha value to $\alpha = 0.1$ in order to decide whether a test statistic is statistically significant, thus for p-values smaller than $\alpha$ we keep the feature otherwise we remove it from the model. 
 Let's have a look now at the characteristics of the full model:
 ```{r, fig.dim=c(3.5,3.5)}
 mod.full <- glm(stroke~., data = stroke_data, family = binomial)
@@ -293,7 +294,8 @@ Let's try to check other convenient models using a mixed approach. We use the re
 The model `mod.red` has `stroke` as response and `age`, `avg_glucose_level`, `hypertension` and `heart_disease` as predictors.
 We recall that its AIC is $1384.6$.
 
-Initially we consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`, `hypertension` and `heart_disease` and we verify that only `age*heart_disease` gives a relevant contribution. We get AIC = 1384. 
+Initially we consider the interaction of `age` with the other numerical features, i.e. `avg_glucose_level`, `hypertension` and `heart_disease` and we verify that only `age*heart_disease` gives a relevant contribution. We get AIC = 1384.  
+Furthermore we can see that the interaction variable is statistically significant for a alpha value set to 0.1, hence we can say that the two slope for the two different groups, affected by the heart disease and not, are significantly different to each other. Last but not least we also see that by considering the interaction we have also a high increment in the beta value of the heart disease.
 ```{r}
 mod1 <- glm(stroke~age + avg_glucose_level + heart_disease+ hypertension +
                age*heart_disease, family=binomial)
@@ -626,9 +628,10 @@ Furthermore, by looking at the plots generated in section 2.2 -Descriptive stati
 Despite the encountered predictiveness issues we still can highlight many properties of the relationship among predictors and response variables, in particular thanks to the explanatory analysis made on the usage of logistic regression in this report.  
 For this reason after the training and validation phases, in which we tested the models we have taken into account, we selected `mod1`
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb|age*heart_disease|,$$ 
-although it also guarantees slightly better performances than others. In particular, in the `summary(mod1)` we can see how each feature contribute on the prediction by looking at the $\beta$ parameters. The higher contribution on stroke comes from `heart_disease` with a coefficient equal to $2.765$, even though its p-value is not the smallest; the other features have all coefficient smaller than 1. 
-On the other hand, the strongest relation is always between `stroke` and `age`, older people have a higher probability to get a stroke and this disease will become an increasingly important health problem as the world's population continues to age.  
-\textcolor{red}{Furthermore from this model we have been able to find some little interactions among `heart_disease` and `age` which should be analyzed more.}
+although it also guarantees slightly better performances than others. In particular, in the `summary(mod1)` we can see how each feature contribute on the prediction by looking at the $\beta$ parameters. The higher contribution on stroke comes from `heart_disease` with a coefficient equal to $2.765$, even though its p-value is not the smallest; the other features have all coefficient smaller than 1 but are extremely important too, and highlight strong relationship with having a stroke. 
+Indeed, the strongest relation is always between `stroke` and `age`, older people have a higher probability to get a stroke and this disease will become an increasingly important health problem as the world's population continues to age.  
+Furthermore from this model we have been able to find some interactions among `heart_disease` and `age` as described in the chapter 3.1.2, thanks to this interaction we have been able to find that the response variable has some effects by considering the people with heart disease and not, finally we also saw that by considering the interaction we end up having a high increment in the beta value of the heart disease variable.
 
 Resuming the initial question, if it is possible to prevent a stroke, we can answer that with our data we cannot achieve a secure prediction, but only with a moderate confidential interval of 90% on it.  
-A good solution can be to find by exploiting features related with the stroke disease, in order to produce relevant results.
+Further analysis have to be explore considering other type of features related with the stroke disease, in order to produce relevant results.  
+It has also to concern that more data should be collected especially for persons affected by stroke and also more correlated pathological variable and health indicators should also be considered too by looking at the available medical literature. These analysis and integration will allow to build more reliable explanatory and predictive models.
