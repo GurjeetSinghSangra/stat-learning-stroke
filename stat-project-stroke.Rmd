@@ -155,7 +155,7 @@ ggplot(stroke_data, aes(x = bmi, y = age, col = as.factor(stroke))) +
 ```
 
 What we can see from these scatter plots is that if we have low `avg_glucose_level` values in relation with `age` or `bmi`, the stroke disease tends to be not present. On the other hand, if we look at the `bmi` predictor we can notice that there are samples of stroke cases spread all over in all of its range of values, so it highlights no clear correlation of `bmi` with stroke, even when we put this features in relation with the others.  
-`avg_glucose_level` and `bmi` could not be so strictly related to disease but maybe correlated to other illnesses linked (or not) to it.  
+`avg_glucose_level` and `bmi` could not be so strictly related to the disease but maybe correlated to other illnesses linked (or not) to it.  
 In the end we can see that it is not easy to identify the direct relationship with the stroke while dealing with the features that we have, and it is difficult a further interpretation of the data.
 
 ## 2.3 Data Science Questions
