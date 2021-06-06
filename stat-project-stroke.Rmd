@@ -133,7 +133,7 @@ boxplot(age~stroke, xlab = 'stroke' , ylab = 'age', col = c('#F8766D','#00BFC4')
 par(mfrow=c(1,1))
 ```
 
-Looking at Figure \ref{bp_stroke} we can see that the incidence of the disease increases progressively with age, in particular the summary of `age` shows that it has been computed a sampling between a baby of 8 days and a senior of 82 years old and this can also be seen in the boxplot. We get also the information that the youngest person affected of stroke disease is 14 years old (an outlier), while the oldest one is 82 years old.  
+Looking at Figure \ref{bp_stroke} we can see that the incidence of the disease increases progressively with age, in particular the summary of `age` shows that the data observed cover people of all ages from babies of 8 days to seniors of 82 years old and this can also be seen in the boxplot. We get also the information that the youngest person affected of stroke disease is 14 years old (an outlier), while the oldest one is 82 years old.  
 We make a more detailed analysis looking at the following tables:
 ```{r}
 table(stroke.less.35 <- stroke_data[stroke_data$age<35, 'stroke'])
