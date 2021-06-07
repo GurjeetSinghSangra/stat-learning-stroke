@@ -255,7 +255,7 @@ We can observe the presence of high non-linearity in the dataset.
 Indeed we can find not spread equal residuals around a horizontal line without distinct patterns, attesting to the fact that there is no linear relationship. 
 
 **Normal Q-Q**  
-We discover that residuals do no follow a normal distribution.  
+We discover that residuals do not follow a normal distribution.  
 We know that obtaining positive coefficient estimates, we have a positive association. So, the larger the value the higher is the estimated probability of stroke. 
 
 **Scale-Location**  
@@ -548,7 +548,7 @@ For this reason, from now onward, we will consider only the Recall-Precision opt
 
 From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values of each fitting, in particular we define the optimum choice which minimize more both values but by giving more importance to false negative minimization.
 
-### 4.3.2 Model validation
+### 4.3.1 Model validation
 A final assessment has to be done by seeing the performance of our elective models on a set of data where they have not been trained on, for this reason we will use the validation set that we defined previously. 
 In this manner we are able to simulate a real scenario case, detect some possible overfitting issues, and by comparing the performance of each model on this set we can finalize our choice.  
 In this phase the evaluation is again made by applying a threshold on the predictions, in particular we will use the Precision-Recall thresholds that we calculated in the training phase and see if the given results are compliant to what we obtained on the training set. Moreover, we will calculate the positive and negative error rates, which represent the misclassification error on the prediction of having, or not, a stroke.
