@@ -610,7 +610,7 @@ We also noticed that the QDA model shows better results than LDA, since it explo
 
 # 5 Conclusions and Further Analysis
 
-As seen in the course of our analysis, we countered different problems during our analysis. In particular, many assumptions on the data and on the models have not been satisfied by considering all the given predictors or by taking just a subset of variables, for example the presence of collinearity, data not Normal distributed, heteroscedasticity, high variance, and all the other issues highlighted in the previous chapters.  
+As seen in the course of our analysis, we countered different problems. In particular, many assumptions on the data and on the models have not been satisfied by considering all the given predictors or by taking just a subset of variables, for example the presence of collinearity, data not Normal distributed, heteroscedasticity, high variance, and all the other issues highlighted in the previous chapters.  
 
 The tests computed on our data involved various models, in which we have included different combination of predictors, even by mixing them together to exploits and explore some synergy relationships.  
 Unfortunately the achieved complexity of the models is not enough for an accurate stroke prediction. We still end up having a high amount of false rates.  
@@ -625,4 +625,4 @@ Furthermore, from this model we have been able to find some interactions among `
 
 Resuming the initial question, if it is possible to prevent a stroke, we can answer that with our data we cannot achieve a secure prediction, but only with a moderate confidential interval of 90% on it.  
 Further analysis have to be explore considering other type of features related with the stroke disease, in order to produce relevant results.  
-It has also to concern that more data should be collected especially for persons affected by stroke and also more correlated pathological variable and health indicators should be considered too, by looking at the available medical literature. These analysis and integration will allow to build more reliable explanatory and predictive models.
+It has also to concern that more data should be collected especially for people affected by stroke and also more correlated pathological variable and health indicators should be considered too, by looking at the available medical literature. These analysis and integration will allow to build more reliable explanatory and predictive models.
