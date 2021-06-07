@@ -407,17 +407,17 @@ yes.strokes.data <- stroke_data[stroke == 1, ]
 rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
 ```
 
-We construct the training set made of 75% instances of those that are not affected by the stroke, and the 57% of the stroke cases.
+We construct the training set made of 75% instances of the whole dataset and 4,6% of them are affected by stroke.
 ```{r}
-training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
-training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
+training.set <- no.strokes.data[rnd.idx.no.strokes[1:3522], ]
+training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:160], ])
 shuffle <- sample(nrow(training.set))
 training.set <- training.set[shuffle, ]
 ```
-The remaining data is then used for the validation set and it is made of 25% of person with no stroke and 42% with stroke.
+The remaining data is then used for the validation set and it is made of 25% with 4,1% stroke cases.
 ```{r}
-val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
-val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
+val.set <- no.strokes.data[rnd.idx.no.strokes[3523:4700], ]
+val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[161:209], ])
 shuffle <- sample(nrow(val.set)) 
 val.set <- val.set[shuffle, ]
 ```

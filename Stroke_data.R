@@ -326,16 +326,16 @@ yes.strokes.data <- stroke_data[stroke == 1, ]
 rnd.idx.yes.strokes <- sample(c(1:dim(yes.strokes.data)[1]))
 
 ##TRAINING SET
-training.set <- no.strokes.data[rnd.idx.no.strokes[1:3562], ]
-training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:120], ])
+training.set <- no.strokes.data[rnd.idx.no.strokes[1:3522], ]
+training.set <- rbind(training.set, yes.strokes.data[rnd.idx.yes.strokes[1:160], ])
 shuffle <- sample(nrow(training.set)) #shuffle the dataset, since the strokes are added in the last positions
 training.set <- training.set[shuffle, ]
 training.set
 dim(training.set)
 
 ##VALIDATION SET
-val.set <- no.strokes.data[rnd.idx.no.strokes[3563:4700], ]
-val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[121:209], ])
+val.set <- no.strokes.data[rnd.idx.no.strokes[3523:4700], ]
+val.set <- rbind(val.set, yes.strokes.data[rnd.idx.yes.strokes[161:209], ])
 shuffle <- sample(nrow(val.set)) #shuffle the dataset, since the strokes are added in the last positions
 val.set <- val.set[shuffle, ]
 
