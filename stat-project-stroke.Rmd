@@ -36,7 +36,7 @@ kable(stroke_data[1:5,], format = 'simple', align='ccccccccc',
 
 ## 2.1 Preprocessing
 
-The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected was referring to different people, thus no recidivist status were involved.  
+The preliminary part of the analysis focuses on the study of the dataset and its pre-processing: we looked at the `id` column and verified that all the data collected were referring to different people, thus no recidivist status were involved.  
 After this check we removed the column from the dataset since it did not hold useful information for our study.
 ```{r}
 stroke_data <- stroke_data[,-1]
@@ -179,7 +179,7 @@ Logistic regression can be defined as a type of *generalized linear model (GLM)*
 Rather than computing directly the response $Y$, logistic regression computes the probability that $Y$ belongs to a particular category, in our case $1$ if the person has a stroke disease, $0$ otherwise.  
 In this part of the predictive analysis we will present three different type of models, compared to discover the best one that can better interpret the data. 
 In particular, our model selection will be guide both from the p-values and probabilistic statistical measure that attempts to quantify both the model performance on the training dataset and the complexity of the model. An example of this last strategy is given by the *Akaike Information Criterion ($AIC$)*.  
-Compared with the $BIC$ method, the $AIC$ statistic penalizes complex model less, meaning that it may put more emphasis on model performance on the training dataset, and, in turn, select more complex models. Its description is given by the following formula 
+Compared with the $BIC$ method, the $AIC$ statistic penalizes complex model less, meaning that it may put more emphasis on model performance on the training dataset, and, in turn, it may select more complex models. Its description is given by the following formula 
 $$ AIC = -2 \cdot \ell(\hat \Theta ) + 2d,$$
 where $\ell(\hat \Theta )$ is the maximized value of the log-likelihood function for the estimated model and $d$ the number of predictors.
 We decided to exclude the Mallow's $C_p$ and the $R^2$ adjusted techniques because they work efficiently in the case of linear regression.
@@ -189,7 +189,7 @@ We decided to exclude the Mallow's $C_p$ and the $R^2$ adjusted techniques becau
 ### 3.1.1 Full and Reduced Models
 
 We start with the full model to see if all the features of the dataset contribute on the prediction of a stroke.  
-Up to now we have already mentioned if some predictors seem to be more or less correlated to the response variable, and a way for analyze such relation is by introducing the *null hypothesis*. In the case of the full model, we are dealing with $10$ explanatory variables and so we have 
+Up to now we have already mentioned if some predictors seem to be more or less correlated to the response variable, and a way to analyze such relation is by introducing the *null hypothesis*. In the case of the full model, we are dealing with $10$ explanatory variables and so we have 
 $$H_0 : \beta_1 = \dots = \beta_{10} = 0$$
 and this means that we are making the assumption that no predictors is somehow related with `stroke`. If we reject the null hypothesis we are assuming that there is in fact a correlation and we have to find which feature is involved.  
 To decide whether or not reject $H_0$ we set the alpha value to $\alpha = 0.1$ in order to decide whether a test statistic is statistically significant, thus for p-values smaller than $\alpha$ we keep the feature otherwise we remove it from the model.  
@@ -198,7 +198,7 @@ Let's have a look now at the characteristics of the full model:
 mod.full <- glm(stroke~., data = stroke_data, family = binomial)
 summary(mod.full)
 ```
-Here we see that `age`, `avg_glucose_level` and `hypertension` are the variables most related to `stroke`, with a p-value smaller than $0.005$, also `heart_disease` contributes a bit to the model with a p-value of $0.092381$. As expected, the collinearity factors, i.e. i.e. `work_type`, `Residence_type` and `ever_married`, do not contribute on the model.  
+Here we see that `age`, `avg_glucose_level` and `hypertension` are the variables most related to `stroke`, with a p-value smaller than $0.005$, but also `heart_disease` contributes a bit to the model with a p-value of $0.092381$. As expected, the collinearity factors, i.e. `work_type`, `Residence_type` and `ever_married`, do not contribute on the model.  
 Let's use the residual plots to get more information about this model.
 ```{r}
 par(mfrow=c(2,2))
@@ -292,7 +292,7 @@ summary(mod1)
 ```
 Furthermore we can see that the interaction variable is statistically significant for a alpha value set to 0.1, hence we can say that the two slope for the two different groups, affected by the heart disease and not, are significantly different to each other. Last but not least we also see that by considering the interaction we have also a high increment in the beta value of the heart disease.
 
-We consider now all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` is the best of the possible relation even if it can not improve the previous model.  
+We consider now all the interaction of `avg_glucose_level` with the remaining predictors and find out that `avg_glucose_level*hypertension` is the best of the possible relations even if it can not improve the previous model.  
 It has an $AIC$ of $1385.9$.
 ```{r}
 mod2 <- glm(stroke ~ age + avg_glucose_level + heart_disease + hypertension +
@@ -546,7 +546,7 @@ For our dataset by using the latter approach we have to highlight that the numbe
 But as previously mentioned, in clinical cases an error committed to diagnose a disease can be very dangerous, for example when instead of predicting a stroke we classify it as a harmless case.
 For this reason, from now onward, we will consider only the Recall-Precision optimal threshold since it takes in consideration the False negative cases.
 
-From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values of each fitting, in particular we define the optimum choice which minimize more both values but by giving more importance to false negative minimization.
+From the above confusion matrix we can already see which model is giving the best result by looking at the FP and FN values of each fitting, in particular we define the optimum choice which minimizes more both values but by giving more importance to false negative minimization.
 
 ### 4.3.1 Model validation
 A final assessment has to be done by seeing the performance of our elective models on a set of data where they have not been trained on, for this reason we will use the validation set that we defined previously. 
@@ -604,7 +604,7 @@ sprintf("Positive error rate is : %f", conf.matr[2,2] / (conf.matr[1,2] + conf.m
 sprintf("Negative error rate is : %f", conf.matr[2,1] / (conf.matr[1,1] + conf.matr[2,1]))
 ```
 
-As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates. The ratio of the misclassified non-stroke person is almost zero in all models, so we do almost not make mistake when saying to a person that he/she will not get a stroke disease.  
+As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates. The ratio of the misclassified non-stroke person is almost zero in all models, so we do almost not make mistake when saying to a person that they will not get a stroke disease.  
 By running the code several times we saw that on average the reduced model (`mod1`) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insights of the predictors, as we saw in chapter 3.1.  
 We also noticed that the QDA model shows better results than LDA, since it exploits the heteroscedasticity among stroke classes.
 
@@ -612,14 +612,14 @@ We also noticed that the QDA model shows better results than LDA, since it explo
 
 As seen in the course of our analysis, we countered different problems. In particular, many assumptions on the data and on the models have not been satisfied by considering all the given predictors or by taking just a subset of variables, for example the presence of collinearity, data not Normal distributed, heteroscedasticity, high variance, and all the other issues highlighted in the previous chapters.  
 
-The tests computed on our data involved various models, in which we have included different combination of predictors, even by mixing them together to exploits and explore some synergy relationships.  
+The tests computed on our data involved various models, in which we have included different combinations of predictors, even by mixing them together to exploits and explore some synergy relationships.  
 Unfortunately the achieved complexity of the models is not enough for an accurate stroke prediction. We still end up having a high amount of false rates.  
 Furthermore, by looking at the plots generated in section 2.2 -Descriptive statistic- we can see that the data are not linearly separable, thus it is not so easy to manage them by using linear models.
 
 Despite the encountered predictiveness issues we still can highlight many properties of the relationship among predictors and response variables, in particular thanks to the explanatory analysis made on the usage of logistic regression in this report.  
 For this reason after the training and validation phases, in which we tested the models we have taken into account, we selected `mod1`
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb|age*heart_disease|,$$ 
-although it also guarantees slightly better performances than others. In particular, in the `summary(mod1)` we can see how each feature contribute on the prediction by looking at the $\beta$ parameters. The higher contribution on stroke comes from `heart_disease` with a coefficient equal to $2.765$, even though its p-value is not the smallest; the other features have all coefficient smaller than 1 but are extremely important too, and highlight strong relationship with having a stroke. 
+although it also guarantees slightly better performances than others. In particular, in the `summary(mod1)` we can see how each feature contributes on the prediction by looking at the $\beta$ parameters. The higher contribution on stroke comes from `heart_disease` with a coefficient equal to $2.765$, even though its p-value is not the smallest; the other features have all coefficient smaller than 1 but are extremely important too, and highlight strong relationship with having a stroke. 
 Indeed, the strongest relation is always between `stroke` and `age`, older people have a higher probability to get a stroke and this disease will become an increasingly important health problem as the world's population continues to age.  
 Furthermore, from this model we have been able to find some interactions among `heart_disease` and `age` as described in the chapter 3.1.2, thanks to it we discovered that the response variable has some effects by considering the people with heart disease and not. Finally, we also saw that by considering the interaction we end up having a high increment in the beta value of the heart disease variable.
 
