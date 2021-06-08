@@ -91,10 +91,10 @@ boxplot(age, xlab = 'age', pch=20, col='#00BA38')
 par(mfrow=c(1,1))
 ```
 
-From Figure \ref{bp} we can see that in the first two boxplots (starting from the left) there are lots of outliers, whose range can also be seen from the summary of the `avg_glucose_level` and `bmi` variables and applying the following formula: $max\_value \, -\, q_{3/4}*1.5 \,IQR$, where $q_{1/4}, q_{3/4}$ are the first and third quantile, and $IQR = q_{3/4} - q_{1/4}$ is the interquantile range. So we have a range of outliers of
-$$ 271 - (113.57+1.5*(113.57-77.07)) = 102.68$$
-for the glucose, and a range of
-$$ 97.60 - (33.10 + 1.5 *(33.10-23.50))= 50.10 $$
+From Figure \ref{bp} we can see that in the first two boxplots (starting from the left) there are lots of outliers for the variables `avg_glucose_level` and `bmi`. We compute the blabla using the following formula: $q_{3/4}*1.5 \,IQR$, where $q_{1/4}, q_{3/4}$ are the first and third quantile, and $IQR = q_{3/4} - q_{1/4}$ is the interquantile range. So we have a blabla of
+$$113.57+1.5*(113.57-77.07) = 168.32$$
+for the glucose, and a blabla of
+$$33.10 + 1.5 *(33.10-23.50)= 47.50 $$
 for the body mass index.  
 Actually, they represent real-case scenarios (people affected by high glucose levels or with a bmi out of range are only a few) and possible interesting cases of pathologies bounded with diabetes. Hence these data points have to be considered during modeling, they could be helpful to predict stroke cases because it could be due to complications of diabetes, as mentioned in the medical literature.
 
@@ -312,24 +312,21 @@ summary(mod3)
 
 After that, we pick up the reduced model without `heart_disease` which represents the explanatory feature with higher p-value and we continue to work in the same way we have just seen. We repeated the scheme with `age`, without earning benefits.  
 The $AIC$ has a value of $1386.2$.
-```{r, results='hide'}
+```{r}
 mod4 <- glm(stroke ~ age + avg_glucose_level + hypertension + age*hypertension,
               family=binomial)
-summary(mod4)
 ```
 We go further analyzing also `avg_glucose_level*hypertension`.
-```{r, results='hide'}
+```{r}
 mod5 <- glm(stroke ~ age + avg_glucose_level + hypertension + 
               avg_glucose_level*hypertension, family = binomial)
-summary(mod5)
 ```
 In the end, we include the possible best interactions into the reduced model.
 It could be a good way, but it does not represent our best solution due to a high p-value.  
 The corresponding $AIC$ is $1384.2$.
-```{r, results='hide'}
+```{r}
 mod6 <- glm(stroke ~ age + avg_glucose_level + heart_disease + hypertension +
               age*heart_disease + heart_disease*hypertension, family = binomial)
-summary(mod6)
 ```
 As conclusion, we can promote `mod1` as the model which better fits our data:
 $$\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|avg_glucose_level| + \beta_3 \times \verb|heart_disease| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|$$
@@ -359,7 +356,7 @@ mod.poly2 <- glm(stroke ~ age + heart_disease + avg_glucose_level + hypertension
 mod.poly3 <- glm(stroke ~ age + heart_disease + avg_glucose_level + hypertension 
                  + bmi + I(bmi^2) + I(avg_glucose_level^2), family = binomial)
 ```
-However, we do not achieve anything interesting with polynomial model. There are no improvements in the results, seeing the value of the $AIC$ which is extremely high.
+However, we do not achieve anything interesting with polynomial model. There are no improvements in the results and the value of the $AIC$ is 1390, which is extremely high.
 
 ## 3.2 Bayesian modelling 
 In this section we now study other types of predictive models, which are based on Bayesian concepts. These methods exploit conditional probability and Bayes theorems to make predictions, they are also widely used in classification problems because of their nice structure and properties. Furthermore, we would like to compare their results with the logistic model in order to assess their performances. Recall that we have to consider the LDA and QDA models which approximate the Bayesian classifier (the ideal one) as from a computation point of view it is very expensive and requires that the likelihood and the prior distribution to be conjugate (i.e their distributions are from the same family of distribution).
@@ -447,7 +444,8 @@ get.roc.recall.values <- function(pred_models, true_value, yes_plot=TRUE) {
     ### ROC
     roc.res <- roc(true_value, pred, levels=c("0", "1"))
     if (yes_plot==TRUE){
-      plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate", ylab="True positive rate")
+      plot(roc.res, print.auc=TRUE, legacy.axes=TRUE, xlab="False positive rate",
+                ylab="True positive rate")
     }
     best.roc  <- coords(roc.res, "best")
     
