@@ -91,11 +91,7 @@ boxplot(age, xlab = 'age', pch=20, col='#00BA38')
 par(mfrow=c(1,1))
 ```
 
-From Figure \ref{bp} we can see that in the first two boxplots (starting from the left) there are lots of outliers for the variables `avg_glucose_level` and `bmi`. We compute the blabla using the following formula: $q_{3/4}*1.5 \,IQR$, where $q_{1/4}, q_{3/4}$ are the first and third quantile, and $IQR = q_{3/4} - q_{1/4}$ is the interquantile range. So we have a blabla of
-$$113.57+1.5*(113.57-77.07) = 168.32$$
-for the glucose, and a blabla of
-$$33.10 + 1.5 *(33.10-23.50)= 47.50 $$
-for the body mass index.  
+From Figure \ref{bp} we can see that in the first two boxplots (starting from the left) there are lots of outliers for the variables `avg_glucose_level` and `bmi`.  
 Actually, they represent real-case scenarios (people affected by high glucose levels or with a bmi out of range are only a few) and possible interesting cases of pathologies bounded with diabetes. Hence these data points have to be considered during modeling, they could be helpful to predict stroke cases because it could be due to complications of diabetes, as mentioned in the medical literature.
 
 In order to compare features in pairs and judge which of each one is preferred, or has a greater amount of some quantitative property we provide a pair-wise plot. In addition, to involve also the categorical variables we wrote some useful functions:
@@ -607,8 +603,7 @@ sprintf("Negative error rate is : %f", conf.matr[2,1] / (conf.matr[1,1] + conf.m
 ```
 
 As we did during the training phase, the evaluation is made by looking at the false negative (FN) and false positive (FP) rates. The ratio of the misclassified non-stroke people is almost zero in all models, so we do almost not make mistake when saying to them that they will not get a stroke disease.  
-By running the code several times we saw that on average the reduced model (`mod1`) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insights of the predictors, as we saw in chapter 3.1.  
-We also noticed that the QDA model shows better results than LDA, since it exploits the heteroscedasticity among stroke classes.
+By running the code several times we saw that on average the reduced model (`mod1`) slightly outperforms the other models, by minimizing more the false rates, in addition we preferred it because it allows us to give more insights of the predictors, as we saw in chapter 3.1.
 
 # 5 Conclusions and Further Analysis
 
