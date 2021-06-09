@@ -503,9 +503,8 @@ The next step instead involves the calculation of the best threshold by using tw
 Thus we use our built-in function by passing the elective models, then we print the summary of the results and extract the thresholds of the two metrics in different variables, which will be helpful when we will need to apply them.
 
 ```{r, message=FALSE}
-res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, 
-                                 lda.fit.train.pred, qda.fit.train.pred), 
-                                 training.set$stroke, yes_plot=TRUE)
+res = get.roc.recall.values(list(mod.red.train.pred, mod1.train.pred, lda.fit.train.pred,qda.fit.train.pred),
+training.set$stroke, yes_plot=TRUE)
 print(res)
 recall_thresholds <- res$Thr.Prec.Rec 
 roc_thresholds <- res$Thr.ROC
@@ -558,7 +557,6 @@ conf.matr <- table(val.set$stroke, mod.red.val.class,  dnn=c('Ground thruth','re
             predicted'))
 print(conf.matr)
 ```
-
 ```{r, echo=FALSE}
 sprintf("Positive error rate is : %f", conf.matr[2,2] / (conf.matr[1,2] + conf.matr[2,2]))
 sprintf("Negative error rate is : %f", conf.matr[2,1] / (conf.matr[1,1] + conf.matr[2,1]))
