@@ -115,7 +115,7 @@
 
 \title{Statistical Learning Project}
 \author{Filippo Santin, Gurjeet Singh, Francesca Zen}
-\date{18/5/2021}
+\date{22/6/2021}
 
 \begin{document}
 \maketitle
@@ -123,9 +123,9 @@
 \hypertarget{introduction}{%
 \section{1 Introduction}\label{introduction}}
 
-In the following report, we present an analysis computed on stroke
+In the following report, we present a study computed on stroke
 disease in which we try to explain from statistical analysis some
-correlation factors and statistics of the given features by designing
+correlation factors and statistics of the given features, by designing
 models to predict the presence of stroke disease. In addition, we will
 highlight possible linear and non-linear relationships among the given
 features (predictors) and the stroke disease variable (predicted
@@ -144,7 +144,7 @@ it involves the need for immediate therapeutic intervention and adapted
 to the needs of the patient. In this sense, looking for relation between
 features may help to prevent or assess it.
 
-In order to have a guide for the interpretation of the data we underline
+In order to have a guide for the interpretation of the data, we underline
 the following information:
 
 \begin{itemize}
@@ -177,7 +177,8 @@ and it is composed of 5,110 entries with a total of 12 columns:
                     \StringTok{\textquotesingle{}work\_type\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}res\_type\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}glucose\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}bmi\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}smoking\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}stroke\textquotesingle{}}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
-
+\newpage
+\setlength\LTleft{-1cm}
 \begin{longtable}[]{@{}cccccccccccc@{}}
 \toprule
 id & gender & age & hypert. & hd & ev\_marr & work\_type & res\_type &
@@ -195,7 +196,10 @@ smokes & 1 \\
 1665 & Female & 79 & 1 & 0 & Yes & Self-employed & Rural & 174.12 & 24 &
 never smoked & 1 \\
 \bottomrule
+\caption{Few samples of the dataset}\label{samples_of_dataset}
 \end{longtable}
+
+In Table \ref{samples_of_dataset} we can see an overview of the characteristics of people in the dataset.
 
 \hypertarget{preprocessing}{%
 \subsection{2.1 Preprocessing}\label{preprocessing}}
@@ -297,7 +301,7 @@ Here we give a quick overview of the main information about the dataset:
 \end{Highlighting}
 \end{Shaded}
 
-In order to highlight and analize better the data, we used some plots to
+In order to highlight and analize better the data, we use some plots to
 study their statistics and distribution.\\
 A relevant and important information is provided by the following
 barplot, in which we highlight the unbalance dataset issue: \(209\) people on a
@@ -622,7 +626,7 @@ Up to now we have already mentioned if some predictors seem to be more
 or less correlated to the response variable, and a way to analyze such
 relation is by introducing the \emph{null hypothesis}. In the case of
 the full model, we are dealing with \(10\) explanatory variables and so
-we have \[H_0 : \beta_1 = \dots = \beta_{10} = 0\] and this means that
+we have \[H_0 : \beta_1 = \dots = \beta_{10} = 0,\] and this means that
 we are making the assumption that no predictors is somehow related with
 \texttt{stroke}. If we reject the null hypothesis we are assuming that
 there is in fact a correlation and we have to find which feature is
@@ -703,8 +707,7 @@ Here we see that \texttt{age}, \texttt{avg\_glucose\_level} and
 \texttt{hypertension} are the variables most related to \texttt{stroke},
 with a p-value smaller than \(0.005\), but also \texttt{heart\_disease}
 contributes a bit to the model with a p-value of \(0.092381\). As
-expected, the collinearity factors, i.e.~\texttt{work\_type},
-\texttt{Residence\_type} and \texttt{ever\_married}, do not
+expected, the collinearity factors, i.e.~\texttt{work\_type} and \texttt{ever\_married}, do not
 contribute.\\
 Let's use the residual plots to get more information about this model.
 
@@ -850,10 +853,7 @@ significant and we end up with more or less the same results as before.
 \end{verbatim}
 
 The parameters left to delete are \texttt{bmi} and
-\texttt{smoking\_status} that continue to have a high p-value. Now, we
-are able to define the final reduced model:
-\[\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|\]
-with four explanatory variables.
+\texttt{smoking\_status} that continue to have a high p-value. 
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -893,8 +893,11 @@ with four explanatory variables.
 ## Number of Fisher Scoring iterations: 7
 \end{verbatim}
 
-An important thing to notice is the decreasing p-value of the explanatory variable \texttt{heart\_disease}, that now have a p-value of \(0.046895\).
+An important thing to notice is the decreasing p-value of the explanatory variable \texttt{heart\_disease}, that now is equal to \(0.046895\).
 
+Now, we are able to define the final reduced model:
+\[\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|\]
+with four explanatory variables.\\
 This means that our probability to get a stroke becomes:
 \[p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}\]
 where \(\beta_0, \dots, \beta_4\) can be read in the \texttt{summary} of
@@ -956,7 +959,7 @@ We can see that homoscedasticity does not hold since the line of the
 standard residual is not flat, hence even by standardizing the residuals
 we end up having high variance among them. But in our case, as you can
 notice from this plot, the red line is slightly curved and the residuals
-increase as the fitted \(Y\) values increases. So, the inference here
+increase as the fitted \(Y\) value increases. So, the inference here
 is, heteroscedasticity exists.
 
 \textbf{Residual vs Leverage}\\
@@ -964,6 +967,10 @@ Looking at the leverage plot, we see the presence of some samples with
 high leverage value (bottom right), which could influence the prediction
 of the model (even if the R-plot does not show us its index).
 
+Moreover, in Table \ref{outliers_reduced}, there are outliers (with no connection with our regression) that have high variance, and they represent some rare cases of disease development; as we saw previously there was a case
+of a 14 years old girl that had stroke.
+
+\newpage
 \begin{longtable}[]{@{}lccccccccccc@{}}
 \toprule
 & gender & age & hypert. & hd & ev\_marr & work\_type & res\_type &
@@ -977,12 +984,8 @@ smokes & 1 \\
 246 & Female & 14 & 0 & 0 & No & children & Rural & 57.93 & 30.9 &
 Unknown & 1 \\
 \bottomrule
+\caption{Otuliers of the Reduced Model}\label{outliers_reduced}
 \end{longtable}
-
-Moreover, in the above table, there are outliers (with no connection
-with our regression) that have high variance, and they represent some
-rare cases of disease development; as we saw previously there was a case
-of a 14 years old girl that had stroke.
 
 If we look at the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its \(AIC\)
 is the lowest of the two.\\
@@ -1025,10 +1028,10 @@ understand which variables are relevant on our research and to improve
 the performance of the model. We recall that we defined the significance levels equal to \(0.1\) and we will look for an \(AIC\) value lower than previous seen.\\
 The model \texttt{mod.red} has \texttt{stroke} as response and
 \texttt{age}, \texttt{avg\_glucose\_level}, \texttt{hypertension} and
-\texttt{heart\_disease} as predictors and with \(AIC\) of
+\texttt{heart\_disease} as predictors, and with \(AIC\) of
 \(1384.6\).
 
-Initially we considered the interaction of \texttt{age} with the other
+Initially we consider the interaction of \texttt{age} with the other
 numerical features, i.e.~\texttt{avg\_glucose\_level},
 \texttt{hypertension} and \texttt{heart\_disease} and we achive that
 only \texttt{age*heart\_disease} gives a relevant contribution. We get
@@ -1080,8 +1083,8 @@ not, are significantly different to each other. Last but not least, we
 saw that by considering the interaction we have also a high increment in
 the beta value of the heart disease.
 
-We consider now all the interaction of \texttt{avg\_glucose\_level} with
-the remaining predictors and find out that
+After considerating all the interaction of \texttt{avg\_glucose\_level} with
+the remaining predictors we find out that
 \texttt{avg\_glucose\_level*hypertension} is the best of the possible
 relations even if it can not improve the previous models.\\
 It has an \(AIC\) of \(1385.9\).
@@ -1181,9 +1184,9 @@ which shows a good model with \(AIC = 1384.5\).
 ## Number of Fisher Scoring iterations: 7
 \end{verbatim}
 
-After that, we picked up the reduced model without \texttt{heart\_disease}
+After that, we pick up the reduced model without \texttt{heart\_disease}
 which represents the explanatory feature with higher p-value and we
-continued to work in the same way we have just seen. We repeated the
+continue to work in the same way we have just seen. We repeat the
 scheme with \texttt{age}, without earning benefits.\\
 The \(AIC\) has a value of \(1386.2\).
 
@@ -1219,8 +1222,9 @@ As conclusion, we can promote \texttt{mod1} as the model which better
 fits our data:
 \[\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|avg_glucose_level| + \beta_3 \times \verb|heart_disease| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|\]
 Let's now see some relevant information, such as outliers of
-\texttt{mod1}:
+\texttt{mod1}, looking at Table \ref{outliers_mod1}:
 
+\setlength\LTleft{-.5cm}
 \begin{longtable}[]{@{}lccccccccccc@{}}
 \toprule
 & gender & age & hypert. & hd & ev\_marr & work\_type & res\_type &
@@ -1234,6 +1238,7 @@ never smoked & 1 \\
 100 & Female & 69 & 0 & 0 & Yes & Govt\_job & Urban & 82.81 & 28.0 &
 never smoked & 1 \\
 \bottomrule
+\caption{Outliers of Interaction Model \texttt{mod1}}\label{outliers_mod1}
 \end{longtable}
 
 and other properties and characteristics by the plots:
@@ -1377,7 +1382,7 @@ In this chapter of the report we are now going to evaluate our elective
 models that we have seen so far and pick the best among them.\\
 Furthermore, we will also discuss the metrics used to define the best
 classification threshold of the predicted variables. The models that we
-elected for this analysis, which have shown to represent better our
+electe for this analysis, which have shown to represent better our
 problem are: the two logistic regressions (reduced and interaction
 based), and the models built with the Bayesian modelling approach (LDA
 and QDA).\\
@@ -1450,7 +1455,7 @@ thresholds based on those outputs.
 
 Since we are dealing with a clinical problem the presence of false
 negative (FN) cases is more critical than having false positive (FP)
-ones, for this reason we considered not just the ROC curve but also the
+ones, for this reason we consider not just the ROC curve but also the
 Recall-Precision curve for each model. The Recall function is
 defined as \(Recall = \frac{TP}{TP + FN}\) and the Precision as
 \(Prec= \frac{TP}{TP + FP}\).
@@ -1524,14 +1529,6 @@ We first fit all the elective models on our training set.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## I seguenti oggetti sono mascherati da stroke_data (pos = 3):
-## 
-##     age, avg_glucose_level, bmi, ever_married,
-##     gender, heart_disease, hypertension,
-##     Residence_type, smoking_status, stroke, work_type
-\end{verbatim}
-
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Logistic reduced model}
@@ -1576,16 +1573,11 @@ need to apply them.
 \end{Shaded}
 
 \begin{verbatim}
-##      Thr.ROC Specificity Sensitivity Thr.Prec.Rec  Recall
-## 1 0.02629969   0.6595684     0.91875  0.007419366 0.99375
-## 2 0.02517900   0.6570131     0.91875  0.006769986 0.99375
-## 3 0.03318395   0.7578081     0.83125  0.008055188 0.99375
-## 4 0.03560143   0.7668938     0.83750  0.001537471 0.98125
-##    Precision
-## 1 0.07041630
-## 2 0.07054126
-## 3 0.07044750
-## 4 0.08177083
+##      Thr.ROC Specificity Sensitivity Thr.Prec.Rec  Recall  Precision
+## 1 0.02629969   0.6595684     0.91875  0.007419366 0.99375 0.07041630
+## 2 0.02517900   0.6570131     0.91875  0.006769986 0.99375 0.07054126
+## 3 0.03318395   0.7578081     0.83125  0.008055188 0.99375 0.07044750
+## 4 0.03560143   0.7668938     0.83750  0.001537471 0.98125 0.08177083
 \end{verbatim}
 
 \begin{Shaded}
@@ -1630,7 +1622,7 @@ function.
 \StringTok{            predicted\textquotesingle{}}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
-
+\newpage
 \begin{verbatim}
 ##              Reduced model
 ##             predicted
@@ -1864,7 +1856,7 @@ do not mistake for FN cases.
 By running the code several times we saw that on average the reduced
 model (\texttt{mod1}) slightly outperforms the other models, by
 minimizing more the whole false rates, in addition we preferred it because it
-allows us to give more insights of the predictors, as we saw in chapter
+allows us to give more insights of the predictors, as we saw in section
 3.1.
 
 \hypertarget{conclusions-and-further-analysis}{%
@@ -1909,14 +1901,13 @@ health problem as the world's population continues to age.
 
 Furthermore, from this model we have been able to find some interactions
 among \texttt{heart\_disease} and \texttt{age} as described in the
-chapter 3.1.2, thanks to them we discovered that the response variable has
+section 3.1.2, thanks to them we discovered that the response variable has
 some effects by considering the people with heart disease and not.\\
 Finally, we also saw that by considering the interaction we end up
 having a high increment in the beta value of the heart disease variable.
 
 Resuming the initial question, if it is possible to prevent a stroke, we
-can answer that with our data we cannot achieve a secure prediction. \\
-Further analysis have to be explore considering other type of features
+can answer that with our data we cannot achieve a secure prediction. Further analysis have to be explore considering other type of features
 related with the stroke disease, in order to produce relevant results.\\
 It has also to concern that more data should be collected especially for
 people affected by stroke and also more correlated pathological variable
