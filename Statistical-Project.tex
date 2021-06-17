@@ -4,7 +4,7 @@
 %
 \documentclass[
 ]{article}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,verbatim}
 \usepackage{lmodern}
 \usepackage{ifxetex,ifluatex}
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
@@ -113,8 +113,9 @@
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
-\title{Statistical Learning Project}
-\author{Filippo Santin, Gurjeet Singh, Francesca Zen}
+\title{Statistical Learning Project\\ \textit{First Reaction, Stroke}}
+\author{Filippo Santin \qquad \qquad Gurjeet Singh \qquad \qquad Francesca Zen\\
+2020627\quad \qquad \qquad \qquad 2004251 \qquad \qquad \quad \qquad 2010640}
 \date{22/6/2021}
 
 \begin{document}
@@ -597,7 +598,9 @@ the association of categorical or continuous independent variables with
 one dichotomous dependent variable.\\
 Rather than computing directly the response \(Y\), logistic regression
 computes the probability that \(Y\) belongs to a particular category, in
-our case \(1\) if the person has a stroke disease, \(0\) otherwise.\\
+our case \(1\) if the person has a stroke disease, \(0\) otherwise. In particular, to avoid predictions smaller than \(0\) or greater than \(1\) we use the \textit{logistic function},
+\[ p(X) = \frac{e^{\beta_0 + \beta_1 X_1 + \dots + \beta_pX_p}}{1+e^{\beta_0 + \beta_1 X_1+ \dots + \beta_pX_p}}\]
+with $p$ predictors.\\
 In this part of the predictive analysis we will present three different
 type of models, compared to discover the best one that can better
 interpret the data. In particular, our model selection will be guide
@@ -895,11 +898,8 @@ The parameters left to delete are \texttt{bmi} and
 
 An important thing to notice is the decreasing p-value of the explanatory variable \texttt{heart\_disease}, that now is equal to \(0.046895\).
 
-Now, we are able to define the final reduced model:
-\[\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension|\]
-with four explanatory variables.\\
-This means that our probability to get a stroke becomes:
-\[p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}\]
+The final reduced model is then composed of four explanatory variables and this means that our probability to get a stroke becomes:
+\[p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}},\]
 where \(\beta_0, \dots, \beta_4\) can be read in the \texttt{summary} of
 \texttt{mod.red}, as the coefficient estimates, with the respectively
 variables \(X_1, \dots, X_4\) which represent \texttt{age},
@@ -1220,7 +1220,9 @@ The corresponding \(AIC\) is \(1384.2\).
 
 As conclusion, we can promote \texttt{mod1} as the model which better
 fits our data:
-\[\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|avg_glucose_level| + \beta_3 \times \verb|heart_disease| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|\]
+\[log\bigg(\frac{p(X)}{1-p(X)}\bigg) = \beta_0 + \beta_1\times \verb!age! + \beta_2\times \verb|avg_glucose_level| + \beta_3 \times \verb|heart_disease| \,+ \]
+\[+\, \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|\]
+
 Let's now see some relevant information, such as outliers of
 \texttt{mod1}, looking at Table \ref{outliers_mod1}:
 
@@ -1886,7 +1888,8 @@ variables, in particular thanks to the explanatory analysis made on the
 usage of logistic regression in this report.\\
 For this reason after the training and validation phases, in which we
 tested the models we have taken into account, we selected \texttt{mod1}
-\[\verb|stroke| = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|heart_disease| + \beta_3 \times  \verb|avg_glucose_level| + \beta_4 \times\verb|hypertension| + \beta_5 \times \verb|age*heart_disease|,\]
+\[log\bigg(\frac{p(X)}{1-p(X)}\bigg) = \beta_0 + \beta_1\times \verb|age| + \beta_2\times \verb|avg_glucose_level| + \beta_3 \times \verb|heart_disease| \,+ \]
+\[+\, \beta_4 \times\verb|hypertension| + \beta_5 \times \verb |age*heart_disease|\]
 although it also guarantees slightly better performances than others.\\
 In particular, in the \texttt{summary(mod1)} we can see how each feature
 contributes on the prediction by looking at the \(\beta\) parameters.
