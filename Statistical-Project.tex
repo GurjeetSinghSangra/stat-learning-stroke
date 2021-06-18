@@ -113,7 +113,7 @@
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
-\title{Statistical Learning Project\\ \textit{First Reaction, Stroke}}
+\title{Statistical Learning Project\\ \textit{EDA for stroke clinical cases}}
 \author{Filippo Santin \qquad \qquad Gurjeet Singh \qquad \qquad Francesca Zen\\
 2020627\quad \qquad \qquad \qquad 2004251 \qquad \qquad \quad \qquad 2010640}
 \date{22/6/2021}
@@ -898,7 +898,7 @@ The parameters left to delete are \texttt{bmi} and
 
 An important thing to notice is the decreasing p-value of the explanatory variable \texttt{heart\_disease}, that now is equal to \(0.046895\).
 
-The final reduced model is then composed of four explanatory variables and this means that our probability to get a stroke becomes:
+The final reduced model is then composed of four explanatory variables and this means that our logistic function becomes:
 \[p(X)= \frac{e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}}{1+e^{\beta_0+\beta_1X_1 + \beta_2X_2+\beta_3 X_3+\beta_4 X_4}},\]
 where \(\beta_0, \dots, \beta_4\) can be read in the \texttt{summary} of
 \texttt{mod.red}, as the coefficient estimates, with the respectively
@@ -970,7 +970,7 @@ of the model (even if the R-plot does not show us its index).
 Moreover, in Table \ref{outliers_reduced}, there are outliers (with no connection with our regression) that have high variance, and they represent some rare cases of disease development; as we saw previously there was a case
 of a 14 years old girl that had stroke.
 
-\newpage
+
 \begin{longtable}[]{@{}lccccccccccc@{}}
 \toprule
 & gender & age & hypert. & hd & ev\_marr & work\_type & res\_type &
@@ -986,7 +986,6 @@ Unknown & 1 \\
 \bottomrule
 \caption{Outliers of the Reduced Model}\label{outliers_reduced}
 \end{longtable}
-
 If we look at the results, we can affirm that the reduced model seems to make a more accurate prediction and fits better data than the full one. Indeed, its \(AIC\)
 is the lowest of the two.\\
 To have a confirmation of this result we used \texttt{anova}, a function
@@ -1592,8 +1591,7 @@ need to apply them.
 \begin{figure}
 \centering
 \includegraphics{curves.png}
-\caption{roc and prec-rec curves, with the order: mod.red, mod1, LDA and
-QDA.}
+\caption{roc and prec-rec curves, with the order: reduced model, interaction model, LDA model, QDA model.}
 \end{figure}
 
 Once fitting the models, we would like to see their performance in the
@@ -1608,9 +1606,9 @@ function.
 \StringTok{            predicted\textquotesingle{}}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
-
+\newpage
 \begin{verbatim}
-##              Reduced model 
+##              Reduced model roc
 ##             predicted
 ## Ground thruth    0    1
 ##             0 2323 1199
@@ -1624,9 +1622,9 @@ function.
 \StringTok{            predicted\textquotesingle{}}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
-\newpage
+
 \begin{verbatim}
-##              Reduced model
+##              Reduced model recall
 ##             predicted
 ## Ground thruth    0    1
 ##             0 1423 2099
@@ -1642,7 +1640,7 @@ function.
 \end{Shaded}
 
 \begin{verbatim}
-##              Interaction model 
+##              Interaction model roc
 ##             predicted
 ## Ground thruth    0    1
 ##             0 2314 1208
@@ -1658,7 +1656,7 @@ function.
 \end{Shaded}
 
 \begin{verbatim}
-##              Interaction model
+##              Interaction model recall
 ##             predicted
 ## Ground thruth    0    1
 ##             0 1427 2095
@@ -1674,7 +1672,7 @@ function.
 \end{Shaded}
 
 \begin{verbatim}
-##              LDA model
+##              LDA model recall
 ##             predicted
 ## Ground thruth    0    1
 ##             0 1424 2098
@@ -1690,7 +1688,7 @@ function.
 \end{Shaded}
 
 \begin{verbatim}
-##              QDA model
+##              QDA model recall
 ##             predicted
 ## Ground thruth    0    1
 ##             0 1759 1763
